@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Doogo"
+version = "1.0.0"
+id = "artifacts/doogo"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 23976
+
+[services.development]
+run = "pnpm --filter @workspace/doogo run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/doogo", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/doogo", "run", "serve" ]
+
+[services.env]
+PORT = "23976"
+BASE_PATH = "/"

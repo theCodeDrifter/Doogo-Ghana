@@ -1,0 +1,103 @@
+You are a senior React Native engineer. Build a production-ready Expo app that seamlessly embeds the website https://doogo.shop while making the experience feel as close to a fully native mobile app as possible.
+
+### Core Requirements
+- Use Expo (latest stable version)
+- Use React Native with functional components and hooks
+- Use TypeScript
+- Follow clean architecture and scalable folder structure
+
+### WebView Integration
+- Use react-native-webview
+- Load https://doogo.shop as the main app content
+- Enable:
+  - JavaScript
+  - DOM storage
+  - Cookies (persistent login sessions)
+- Handle navigation state changes. Rely on caching to enable instant navigation
+- Let this custom css always be prioritized. This css should make an existing hidden header(class is .elementor-element-58ced7a) to be rather visible in the app, while the default header(class is .elementor-element-8d79317) should be hidden in the app. This section(Class is .elementor-element-a6cfc58) as well as the Breadcrumb section(class is .elementor-element-5abdb2) & footer(class is .elementor-element-3271f048) should also be hidden.
+
+
+### Native-like Experience Enhancements
+1. Loading UX:
+   - Show a custom initial splash/loading screen while the WebView loads(using the attached doogo logo 50% of screen width, slightly & slowly zooming in & out with this background #d5f7f0).
+
+
+2. Offline Handling:
+   - Detect network status
+   - Show a native offline screen with retry button when no connection
+
+3. Pull-to-Refresh:
+   - Add pull-to-refresh gesture for reloading the WebView
+
+4. Back Navigation:
+   - Android hardware back button should navigate WebView history first
+   - Exit app only when no more history
+
+5. Deep Linking:
+   - Handle internal links within doogo.shop correctly
+   - Prevent opening external browser unless necessary
+
+6. External Links:
+   - Open external URLs in the device browser
+
+7. File Upload Support:
+   - Enable file/image uploads from the WebView
+   - Request proper permissions
+
+8. Push Notifications:
+   - Integrate Expo Notifications
+   - Prepare structure for future backend integration
+
+9. Status Bar:
+   - white
+
+10. Safe Area:
+   - Proper SafeAreaView handling for all devices.
+
+### Performance Optimizations
+- Cache WebView content where & store to facilitate instant navigation
+- Optimize re-renders
+- Use memoization where needed
+- For each of these pages/urls/paths listed below, they all be precached on install, with the precached version always being used as a loading placeholder before the page/url/path is completely loaded.
+ - Homepage(doogo.shop)
+ - Shop(/shop)
+ - Favorites(/wishlist)
+ - Account(/my-account)
+ All order other pages should have a default skeleton shrimmer effect & cached to store & serve o.
+
+### Security
+- Restrict navigation to trusted domains (doogo.shop)
+- Prevent malicious redirects
+- Handle SSL errors gracefully
+
+### UI/UX Polish
+- Smooth transitions
+- Native-feeling gestures
+- No visible “web app” jank
+- Disable zoom unless necessary
+- Prevent horizontal scrolling glitches
+
+### Platform-Specific Behavior
+- Android:
+  - Handle back button properly
+  - Optimize performance
+- iOS:
+  - Enable swipe navigation if possible
+  - Respect iOS UI conventions
+
+### App Configuration
+- Configure app.json with:
+  - App name: Doogo
+  - Proper icon and splash screen placeholders(using the attached doogo logo 50% of screen width, slightly & slowly zooming in & out with this exact background #e6fffa)
+- Enable permissions:
+  - Internet
+  - Media library (for uploads)
+  - identifier: com.palipali.doogo
+
+### Code Structure
+- /components
+- /screens
+- /hooks
+- /services
+- /utils
+
