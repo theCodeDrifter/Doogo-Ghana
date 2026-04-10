@@ -65,3 +65,64 @@ export const INJECTED_META = `
 })();
 true;
 `;
+
+/**
+ * Interceptor injected on every page load.
+ * - Overrides window.open so Google popup-OAuth is caught before it opens
+ * - Intercepts click events on any Google-auth-related anchor/button
+ * Both paths post a GOOGLE_OAUTH message to React Native which then
+ * handles the auth via the system browser (ASWebAuthenticationSession / Custom Tabs).
+ */
+export const INJECTED_GOOGLE_OAUTH_INTERCEPTOR = `
+(function() {
+  if (window.__doogoGoogleInterceptInstalled) return;
+  window.__doogoGoogleInterceptInstalled = true;
+
+  function postGoogleAuth(url) {
+    if (!url) return;
+    window.ReactNativeWebView && window.ReactNativeWebView.postMessage(
+      JSON.stringify({ type: 'GOOGLE_OAUTH', url: url })
+    );
+  }
+
+  // Override window.open to catch popup-style OAuth attempts
+  var _originalOpen = window.open;
+  window.open = function(url, target, features) {
+    if (url && (
+      url.indexOf('accounts.google.com') !== -1 ||
+      url.indexOf('google.com/o/oauth2') !== -1
+    )) {
+      postGoogleAuth(url);
+      return { closed: false, close: function() {} };
+    }
+    return _originalOpen ? _originalOpen.call(window, url, target, features) : null;
+  };
+
+  // Intercept clicks on Google-auth anchors/buttons (capture phase)
+  document.addEventListener('click', function(e) {
+    var el = e.target;
+    // Walk up to find an anchor
+    for (var i = 0; i < 5 && el; i++) {
+      var href = el.getAttribute && el.getAttribute('href');
+      var isGoogleLink = href && (
+        href.indexOf('accounts.google.com') !== -1 ||
+        href.indexOf('google.com/o/oauth2') !== -1 ||
+        (href.indexOf('loginSocial=google') !== -1) ||
+        (href.indexOf('provider=google') !== -1) ||
+        (href.indexOf('google-login') !== -1)
+      );
+      if (isGoogleLink) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        // Resolve relative URLs
+        var resolved = href.startsWith('http') ? href : window.location.origin + (href.startsWith('/') ? '' : '/') + href;
+        postGoogleAuth(resolved);
+        return;
+      }
+      el = el.parentElement;
+    }
+  }, true);
+
+})();
+true;
+`;
