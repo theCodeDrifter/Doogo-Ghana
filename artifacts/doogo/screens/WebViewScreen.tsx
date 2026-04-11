@@ -16,6 +16,7 @@ import WebView, {
 } from "react-native-webview";
 
 import { OfflineScreen } from "@/components/OfflineScreen";
+import { PaymentModal } from "@/components/PaymentModal";
 import { SkeletonShimmer } from "@/components/SkeletonShimmer";
 import { SplashLoading } from "@/components/SplashLoading";
 import { useNetwork } from "@/hooks/useNetwork";
@@ -28,11 +29,19 @@ import { isPrecachePath, isTrustedUrl } from "@/utils/urlUtils";
 
 const HOME_URL = "https://doogo.shop";
 const MY_ACCOUNT_URL = "https://doogo.shop/my-account/";
+
+// Google OAuth — intercepted, opened via ASWebAuthenticationSession / Custom Tab
 const GOOGLE_AUTH_DOMAINS = ["accounts.google.com", "google.com/o/oauth2"];
 
-/** Returns true if a URL is a Google OAuth URL that must leave the WebView */
+// Hubtel payment gateway — intercepted, opened in inline payment sheet
+const PAYMENT_DOMAIN = "pay.hubtel.com";
+
 function isGoogleAuthUrl(url: string): boolean {
   return GOOGLE_AUTH_DOMAINS.some((d) => url.includes(d));
+}
+
+function isPaymentUrl(url: string): boolean {
+  return url.includes(PAYMENT_DOMAIN);
 }
 
 const COMBINED_INJECTED_JS =
@@ -48,21 +57,27 @@ export function WebViewScreen() {
   const [canGoBack, setCanGoBack] = useState(false);
   const [isPrecache, setIsPrecache] = useState(true);
 
-  // Track ongoing OAuth to avoid duplicate sessions
+  // ── Payment modal state ────────────────────────────────────────────────────
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
+
+  // Guards against duplicate sessions
   const oauthInProgress = useRef(false);
+  const paymentInProgress = useRef(false);
 
-  const reload = useCallback(() => {
-    webViewRef.current?.reload();
-  }, []);
-
-  const handleRetry = useCallback(() => {
-    reload();
-  }, [reload]);
+  const reload = useCallback(() => webViewRef.current?.reload(), []);
+  const handleRetry = useCallback(() => reload(), [reload]);
 
   // ─── Android hardware back ────────────────────────────────────────────────
   useEffect(() => {
     if (Platform.OS !== "android") return;
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      // If payment modal is open, close it
+      if (paymentModalVisible) {
+        setPaymentModalVisible(false);
+        paymentInProgress.current = false;
+        return true;
+      }
       if (canGoBack) {
         webViewRef.current?.goBack();
         return true;
@@ -70,73 +85,74 @@ export function WebViewScreen() {
       return false;
     });
     return () => backHandler.remove();
-  }, [canGoBack]);
+  }, [canGoBack, paymentModalVisible]);
 
   // ─── Google OAuth via system browser ─────────────────────────────────────
   const startGoogleAuth = useCallback(async (googleUrl: string) => {
     if (oauthInProgress.current) return;
     oauthInProgress.current = true;
-
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-      /**
-       * openAuthSessionAsync:
-       *  - iOS  → ASWebAuthenticationSession (shares Safari cookies → WKWebView via sharedCookiesEnabled)
-       *  - Android → Chrome Custom Tab (shares WebView cookie store)
-       * redirectUrl prefix: as soon as auth redirects back to doogo.shop the session closes instantly.
-       */
       const result = await WebBrowser.openAuthSessionAsync(
         googleUrl,
         "https://doogo.shop",
-        {
-          // Close the browser the moment doogo.shop redirect is detected
-          dismissButtonStyle: "cancel",
-          // Keep the persistent Safari/Chrome session so cookies carry over
-          preferEphemeralSession: false,
-          showInRecents: false,
-          createTask: false,
-        }
+        { dismissButtonStyle: "cancel", preferEphemeralSession: false, showInRecents: false, createTask: false }
       );
-
       if (result.type === "success") {
-        /**
-         * The session completed and returned a doogo.shop URL (the OAuth callback).
-         * Due to sharedCookiesEnabled (iOS) / shared cookie store (Android), the
-         * session cookie is already available to the WebView.
-         * Navigate directly to /my-account so the WebView reloads fresh.
-         */
         const targetUrl =
           result.url && result.url.startsWith("https://doogo.shop")
             ? result.url
             : MY_ACCOUNT_URL;
-
         webViewRef.current?.injectJavaScript(
           `window.location.replace('${targetUrl.replace(/'/g, "\\'")}'); true;`
         );
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      // For 'cancel' or 'dismiss' we do nothing — user closed the sheet intentionally
     } catch {
-      // Silent fail — OAuth window closed or network error
+      // Silent
     } finally {
       oauthInProgress.current = false;
     }
   }, []);
 
-  // ─── WebView event handlers ───────────────────────────────────────────────
-  const handleNavigationStateChange = useCallback(
-    (navState: WebViewNavigation) => {
-      setCanGoBack(navState.canGoBack);
-      setIsPrecache(isPrecachePath(navState.url));
-      if (!navState.loading) setIsLoading(false);
-    },
-    []
-  );
-
-  const handleLoadStart = useCallback(() => {
-    setIsLoading(true);
+  // ─── Hubtel payment sheet ─────────────────────────────────────────────────
+  const openPaymentModal = useCallback((url: string) => {
+    if (paymentInProgress.current) return;
+    paymentInProgress.current = true;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setPaymentUrl(url);
+    setPaymentModalVisible(true);
   }, []);
+
+  /**
+   * Called by PaymentModal when Hubtel redirects back to doogo.shop.
+   * 1. Close the modal instantly
+   * 2. Navigate the main WebView to the returned doogo.shop URL
+   */
+  const handlePaymentReturn = useCallback((doogoUrl: string) => {
+    setPaymentModalVisible(false);
+    paymentInProgress.current = false;
+    // Small delay ensures modal animation starts closing before WebView navigates
+    setTimeout(() => {
+      webViewRef.current?.injectJavaScript(
+        `window.location.replace('${doogoUrl.replace(/'/g, "\\'")}'); true;`
+      );
+    }, 150);
+  }, []);
+
+  const handlePaymentDismiss = useCallback(() => {
+    setPaymentModalVisible(false);
+    paymentInProgress.current = false;
+  }, []);
+
+  // ─── Main WebView event handlers ──────────────────────────────────────────
+  const handleNavigationStateChange = useCallback((navState: WebViewNavigation) => {
+    setCanGoBack(navState.canGoBack);
+    setIsPrecache(isPrecachePath(navState.url));
+    if (!navState.loading) setIsLoading(false);
+  }, []);
+
+  const handleLoadStart = useCallback(() => setIsLoading(true), []);
 
   const handleLoadEnd = useCallback(() => {
     setIsLoading(false);
@@ -144,23 +160,31 @@ export function WebViewScreen() {
   }, [isInitialLoad]);
 
   /**
-   * Navigation gatekeeper:
-   *  1. Google OAuth URLs → intercept, open system browser, block WebView
-   *  2. Trusted doogo.shop URLs → allow
-   *  3. Everything else → open in device browser, block WebView
+   * Navigation gatekeeper (fires for every URL the main WebView would load):
+   *  1. Hubtel payment URLs  → intercept → open inline payment sheet
+   *  2. Google OAuth URLs    → intercept → open system auth browser
+   *  3. Trusted doogo.shop   → allow
+   *  4. Everything else      → open in device browser
    */
   const handleShouldStartLoadWithRequest = useCallback(
-    (request: { url: string; navigationType?: string }) => {
+    (request: { url: string }) => {
       const { url } = request;
 
       if (url === "about:blank" || url.startsWith("blob:")) return true;
 
-      // Intercept Google OAuth navigation (fired by server-side redirect)
+      // ── Hubtel payment redirect ──────────────────────────────────────────
+      if (isPaymentUrl(url)) {
+        openPaymentModal(url);
+        return false;
+      }
+
+      // ── Google OAuth redirect ────────────────────────────────────────────
       if (isGoogleAuthUrl(url)) {
         startGoogleAuth(url);
         return false;
       }
 
+      // ── Trusted domain ───────────────────────────────────────────────────
       if (!isTrustedUrl(url)) {
         Linking.openURL(url).catch(() => {});
         return false;
@@ -168,21 +192,14 @@ export function WebViewScreen() {
 
       return true;
     },
-    [startGoogleAuth]
+    [openPaymentModal, startGoogleAuth]
   );
 
-  /**
-   * Messages from injected JS:
-   *  - GOOGLE_OAUTH : Google auth URL intercepted by the JS click listener (popup path)
-   *  - PAGE_LOADED  : page signals it's ready (used for future caching hooks)
-   */
   const handleMessage = useCallback(
     (event: WebViewMessageEvent) => {
       try {
         const data = JSON.parse(event.nativeEvent.data);
-        if (data.type === "GOOGLE_OAUTH" && data.url) {
-          startGoogleAuth(data.url);
-        }
+        if (data.type === "GOOGLE_OAUTH" && data.url) startGoogleAuth(data.url);
       } catch {
         // Ignore non-JSON messages
       }
@@ -190,13 +207,8 @@ export function WebViewScreen() {
     [startGoogleAuth]
   );
 
-  const handleError = useCallback((_event: WebViewErrorEvent) => {
-    setIsLoading(false);
-  }, []);
-
-  const handleHttpError = useCallback(() => {
-    setIsLoading(false);
-  }, []);
+  const handleError = useCallback((_event: WebViewErrorEvent) => setIsLoading(false), []);
+  const handleHttpError = useCallback(() => setIsLoading(false), []);
 
   // ─── Offline guard ────────────────────────────────────────────────────────
   if (!isConnected) {
@@ -250,12 +262,19 @@ export function WebViewScreen() {
           allowUniversalAccessFromFileURLs={false}
           mixedContentMode="compatibility"
           setSupportMultipleWindows={false}
-          // Standard mobile user agent — avoids Google's WebView block
           userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
           startInLoadingState={false}
           renderLoading={() => <View />}
         />
       </View>
+
+      {/* ── Hubtel payment sheet ─────────────────────────────────────────── */}
+      <PaymentModal
+        visible={paymentModalVisible}
+        paymentUrl={paymentUrl}
+        onReturnToShop={handlePaymentReturn}
+        onDismiss={handlePaymentDismiss}
+      />
     </View>
   );
 }
