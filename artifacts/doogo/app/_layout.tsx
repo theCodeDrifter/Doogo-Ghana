@@ -9,13 +9,19 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
+import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SplashLoading } from "@/components/SplashLoading";
 import { registerForPushNotifications } from "@/services/notifications";
 
-SplashScreen.preventAutoHideAsync();
+// Prevent native splash from hiding until we're ready —
+// wrapped in try/catch because Expo Go doesn't always support this
+try {
+  SplashScreen.preventAutoHideAsync();
+} catch {}
 
 function RootLayoutNav() {
   return (
@@ -35,7 +41,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded, fontError]);
 
@@ -43,7 +49,14 @@ export default function RootLayout() {
     registerForPushNotifications().catch(() => {});
   }, []);
 
-  if (!fontsLoaded && !fontError) return null;
+  // Show branded splash while fonts are loading — never show a raw white screen
+  if (!fontsLoaded && !fontError) {
+    return (
+      <View style={{ flex: 1 }}>
+        <SplashLoading />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaProvider>
