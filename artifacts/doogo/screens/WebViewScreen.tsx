@@ -29,7 +29,7 @@ import {
   INJECTED_BEFORE_CONTENT_JS,
   INJECTED_GOOGLE_OAUTH_INTERCEPTOR,
 } from "@/utils/injectedJS";
-import { isPrecachePath, isTrustedUrl } from "@/utils/urlUtils";
+import { isTrustedUrl } from "@/utils/urlUtils";
 
 const HOME_URL = "https://doogo.shop/";
 const MY_ACCOUNT_URL = "https://doogo.shop/my-account/";
@@ -44,7 +44,6 @@ function isPaymentUrl(url: string) {
   return url.includes(PAYMENT_DOMAIN);
 }
 
-// Source type for the WebView
 type WVSource = { uri: string } | { html: string; baseUrl: string };
 
 export function WebViewScreen() {
@@ -52,43 +51,40 @@ export function WebViewScreen() {
   const { isConnected } = useNetwork();
   const insets = useSafeAreaInsets();
 
-  // ── Source state: switches between { uri } (live) and { html } (cached) ──
+  // ── Source state ──────────────────────────────────────────────────────────
   const [webViewSource, setWebViewSource] = useState<WVSource>({ uri: HOME_URL });
-
-  // In-memory cache map, populated from disk by initPageCache
   const cacheMap = useRef<Map<string, string>>(new Map());
-  // Prevent switching to cached source more than once for initial load
   const initialSourceSet = useRef(false);
 
   // ── UI state ──────────────────────────────────────────────────────────────
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLiveLoad, setIsLiveLoad] = useState(false); // drives skeleton shimmer
+  const [isLiveLoad, setIsLiveLoad] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
 
   // ── Modal state ───────────────────────────────────────────────────────────
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
 
-  // Guards
   const oauthInProgress = useRef(false);
   const paymentInProgress = useRef(false);
 
-  // ─── Initialise cache on mount ────────────────────────────────────────────
+  // ─── Initialise cache ─────────────────────────────────────────────────────
   useEffect(() => {
     initPageCache((key, freshHtml) => {
-      // Background refresh arrived — update in-memory map
       cacheMap.current.set(key, freshHtml);
-    }).then((diskCache) => {
-      cacheMap.current = diskCache;
-
-      // If home page was cached on disk, serve it instantly instead of the live URI
-      const homeHtml = diskCache.get("home");
-      if (homeHtml && !initialSourceSet.current) {
-        initialSourceSet.current = true;
-        setWebViewSource({ html: homeHtml, baseUrl: "https://doogo.shop/" });
-      }
-    });
+    })
+      .then((diskCache) => {
+        cacheMap.current = diskCache;
+        const homeHtml = diskCache.get("home");
+        if (homeHtml && !initialSourceSet.current) {
+          initialSourceSet.current = true;
+          setWebViewSource({ html: homeHtml, baseUrl: "https://doogo.shop/" });
+        }
+      })
+      .catch(() => {
+        // Cache init failed — app still works, just loads from network
+      });
   }, []);
 
   // ─── Android hardware back ────────────────────────────────────────────────
@@ -118,11 +114,18 @@ export function WebViewScreen() {
       const result = await WebBrowser.openAuthSessionAsync(
         googleUrl,
         "https://doogo.shop",
-        { dismissButtonStyle: "cancel", preferEphemeralSession: false, showInRecents: false, createTask: false }
+        {
+          dismissButtonStyle: "cancel",
+          preferEphemeralSession: false,
+          showInRecents: false,
+          createTask: false,
+        }
       );
       if (result.type === "success") {
         const target =
-          result.url?.startsWith("https://doogo.shop") ? result.url : MY_ACCOUNT_URL;
+          result.url?.startsWith("https://doogo.shop")
+            ? result.url
+            : MY_ACCOUNT_URL;
         webViewRef.current?.injectJavaScript(
           `window.location.replace('${target.replace(/'/g, "\\'")}'); true;`
         );
@@ -163,41 +166,38 @@ export function WebViewScreen() {
     (request: { url: string }) => {
       const { url } = request;
 
-      if (url === "about:blank" || url.startsWith("blob:") || url.startsWith("data:")) {
+      if (
+        url === "about:blank" ||
+        url.startsWith("blob:") ||
+        url.startsWith("data:")
+      ) {
         return true;
       }
 
-      // 1. Hubtel payment → payment sheet
       if (isPaymentUrl(url)) {
         openPaymentModal(url);
         return false;
       }
 
-      // 2. Google OAuth → system auth browser
       if (isGoogleAuthUrl(url)) {
         startGoogleAuth(url);
         return false;
       }
 
-      // 3. Critical page cached → serve from disk instantly
       const key = urlToCacheKey(url);
       if (key !== null && cacheMap.current.has(key)) {
         const html = cacheMap.current.get(key)!;
         const baseUrl = cacheKeyToUrl(key);
         setIsLiveLoad(false);
-        setIsLoading(false);
-        setIsInitialLoad(false);
         setWebViewSource({ html, baseUrl });
-        return false; // block WebView navigation; source prop handles it
+        return false;
       }
 
-      // 4. External URL → device browser
       if (!isTrustedUrl(url)) {
         Linking.openURL(url).catch(() => {});
         return false;
       }
 
-      // 5. Live doogo.shop page → allow, show skeleton + loading bar
       setIsLiveLoad(true);
       return true;
     },
@@ -205,10 +205,12 @@ export function WebViewScreen() {
   );
 
   // ─── WebView lifecycle ────────────────────────────────────────────────────
-  const handleNavigationStateChange = useCallback((navState: WebViewNavigation) => {
-    setCanGoBack(navState.canGoBack);
-    if (!navState.loading) setIsLoading(false);
-  }, []);
+  const handleNavigationStateChange = useCallback(
+    (navState: WebViewNavigation) => {
+      setCanGoBack(navState.canGoBack);
+    },
+    []
+  );
 
   const handleLoadStart = useCallback(() => {
     setIsLoading(true);
@@ -224,7 +226,8 @@ export function WebViewScreen() {
     (event: WebViewMessageEvent) => {
       try {
         const data = JSON.parse(event.nativeEvent.data);
-        if (data.type === "GOOGLE_OAUTH" && data.url) startGoogleAuth(data.url);
+        if (data.type === "GOOGLE_OAUTH" && data.url)
+          startGoogleAuth(data.url);
       } catch {}
     },
     [startGoogleAuth]
@@ -249,15 +252,11 @@ export function WebViewScreen() {
   const showSkeleton = isLiveLoad && isLoading;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Splash shown only on very first load before any content is ready */}
-      {isInitialLoad && <SplashLoading />}
-
-      <View style={[styles.webViewContainer, isInitialLoad && styles.hidden]}>
-        {/* iOS-style loading bar — shown for every page load */}
+    <View style={styles.container}>
+      {/* WebView + controls — always rendered at full size */}
+      <View style={[styles.webViewContainer, { paddingTop: insets.top }]}>
         <LoadingBar loading={isLoading} />
 
-        {/* Skeleton shimmer — only for live (non-cached) loads */}
         {showSkeleton && (
           <View style={StyleSheet.absoluteFill}>
             <SkeletonShimmer />
@@ -275,9 +274,7 @@ export function WebViewScreen() {
           onMessage={handleMessage}
           onError={handleError}
           onHttpError={handleHttpError}
-          // CSS + viewport injected BEFORE any content renders — zero flash
           injectedJavaScriptBeforeContentLoaded={INJECTED_BEFORE_CONTENT_JS}
-          // OAuth interceptor runs post-DOM (needs click listeners)
           injectedJavaScript={INJECTED_GOOGLE_OAUTH_INTERCEPTOR}
           javaScriptEnabled={true}
           domStorageEnabled={true}
@@ -295,9 +292,6 @@ export function WebViewScreen() {
           automaticallyAdjustContentInsets={false}
           contentInsetAdjustmentBehavior="never"
           allowsFullscreenVideo={true}
-          allowFileAccess={true}
-          allowFileAccessFromFileURLs={true}
-          allowUniversalAccessFromFileURLs={false}
           mixedContentMode="compatibility"
           setSupportMultipleWindows={false}
           userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
@@ -306,7 +300,16 @@ export function WebViewScreen() {
         />
       </View>
 
-      {/* Hubtel payment sheet */}
+      {/*
+       * Splash overlays the ENTIRE screen (including status bar area) via absoluteFill.
+       * Guaranteed to cover everything until the WebView fires onLoadEnd.
+       */}
+      {isInitialLoad && (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <SplashLoading />
+        </View>
+      )}
+
       <PaymentModal
         visible={paymentModalVisible}
         paymentUrl={paymentUrl}
@@ -320,7 +323,7 @@ export function WebViewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#d5f7f0", // matches splash — no white ever shows through
   },
   webViewContainer: {
     flex: 1,
@@ -329,11 +332,5 @@ const styles = StyleSheet.create({
   webView: {
     flex: 1,
     backgroundColor: "#ffffff",
-  },
-  hidden: {
-    position: "absolute",
-    width: 0,
-    height: 0,
-    opacity: 0,
   },
 });
