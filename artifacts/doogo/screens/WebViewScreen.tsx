@@ -20,11 +20,7 @@ import { PaymentModal } from "@/components/PaymentModal";
 import { SkeletonShimmer } from "@/components/SkeletonShimmer";
 import { SplashLoading } from "@/components/SplashLoading";
 import { useNetwork } from "@/hooks/useNetwork";
-import {
-  initPageCache,
-  urlToCacheKey,
-  cacheKeyToUrl,
-} from "@/services/pageCache";
+import { initPageCache } from "@/services/pageCache";
 import {
   INJECTED_BEFORE_CONTENT_JS,
   INJECTED_GOOGLE_OAUTH_INTERCEPTOR,
@@ -44,6 +40,8 @@ function isPaymentUrl(url: string) {
   return url.includes(PAYMENT_DOMAIN);
 }
 
+// Source is always a URI — keeps native navigation stack intact.
+// The only exception is the very first load when we have a cached homepage.
 type WVSource = { uri: string } | { html: string; baseUrl: string };
 
 export function WebViewScreen() {
@@ -51,9 +49,10 @@ export function WebViewScreen() {
   const { isConnected } = useNetwork();
   const insets = useSafeAreaInsets();
 
-  // ── Source state ──────────────────────────────────────────────────────────
+  // Start with live URI; switch to cached HTML only on first mount if available
   const [webViewSource, setWebViewSource] = useState<WVSource>({ uri: HOME_URL });
-  const cacheMap = useRef<Map<string, string>>(new Map());
+
+  // Track if we already set the initial cached source so we don't set it again
   const initialSourceSet = useRef(false);
 
   // ── UI state ──────────────────────────────────────────────────────────────
@@ -69,21 +68,22 @@ export function WebViewScreen() {
   const oauthInProgress = useRef(false);
   const paymentInProgress = useRef(false);
 
-  // ─── Initialise cache ─────────────────────────────────────────────────────
+  // ─── Warm the page cache (AsyncStorage) ──────────────────────────────────
+  // If home page HTML is already stored, serve it instantly as initial source.
+  // All navigation after that goes through { uri } — never switches back to { html }.
   useEffect(() => {
-    initPageCache((key, freshHtml) => {
-      cacheMap.current.set(key, freshHtml);
+    initPageCache((_key, _html) => {
+      // Background refresh done — cache is updated for next session
     })
-      .then((diskCache) => {
-        cacheMap.current = diskCache;
-        const homeHtml = diskCache.get("home");
+      .then((storedCache) => {
+        const homeHtml = storedCache.get("home");
         if (homeHtml && !initialSourceSet.current) {
           initialSourceSet.current = true;
           setWebViewSource({ html: homeHtml, baseUrl: "https://doogo.shop/" });
         }
       })
       .catch(() => {
-        // Cache init failed — app still works, just loads from network
+        // Cache unavailable — app loads normally from network
       });
   }, []);
 
@@ -162,10 +162,14 @@ export function WebViewScreen() {
   }, []);
 
   // ─── Navigation gatekeeper ────────────────────────────────────────────────
+  // IMPORTANT: we NEVER switch webViewSource to { html } here.
+  // Doing so breaks WooCommerce JS navigation and the native back stack.
+  // The initial { html } source (home page cache) is handled by the useEffect above.
   const handleShouldStartLoadWithRequest = useCallback(
     (request: { url: string }) => {
       const { url } = request;
 
+      // Always allow blank / blob / data URLs (WebView internals)
       if (
         url === "about:blank" ||
         url.startsWith("blob:") ||
@@ -174,30 +178,25 @@ export function WebViewScreen() {
         return true;
       }
 
+      // Hubtel payment → open in secure payment sheet, block WebView nav
       if (isPaymentUrl(url)) {
         openPaymentModal(url);
         return false;
       }
 
+      // Google OAuth → open system auth browser, block WebView nav
       if (isGoogleAuthUrl(url)) {
         startGoogleAuth(url);
         return false;
       }
 
-      const key = urlToCacheKey(url);
-      if (key !== null && cacheMap.current.has(key)) {
-        const html = cacheMap.current.get(key)!;
-        const baseUrl = cacheKeyToUrl(key);
-        setIsLiveLoad(false);
-        setWebViewSource({ html, baseUrl });
-        return false;
-      }
-
+      // External (non-doogo) links → open in device browser
       if (!isTrustedUrl(url)) {
         Linking.openURL(url).catch(() => {});
         return false;
       }
 
+      // Trusted doogo.shop URL → let WebView navigate natively (back stack preserved)
       setIsLiveLoad(true);
       return true;
     },
@@ -253,7 +252,7 @@ export function WebViewScreen() {
 
   return (
     <View style={styles.container}>
-      {/* WebView + controls — always rendered at full size */}
+      {/* WebView always rendered at full size with status bar padding */}
       <View style={[styles.webViewContainer, { paddingTop: insets.top }]}>
         <LoadingBar loading={isLoading} />
 
@@ -274,7 +273,9 @@ export function WebViewScreen() {
           onMessage={handleMessage}
           onError={handleError}
           onHttpError={handleHttpError}
+          // CSS + viewport injected before any pixel renders (zero flash)
           injectedJavaScriptBeforeContentLoaded={INJECTED_BEFORE_CONTENT_JS}
+          // Google OAuth interceptor — post DOM (needs click listeners)
           injectedJavaScript={INJECTED_GOOGLE_OAUTH_INTERCEPTOR}
           javaScriptEnabled={true}
           domStorageEnabled={true}
@@ -301,8 +302,8 @@ export function WebViewScreen() {
       </View>
 
       {/*
-       * Splash overlays the ENTIRE screen (including status bar area) via absoluteFill.
-       * Guaranteed to cover everything until the WebView fires onLoadEnd.
+       * Splash covers the ENTIRE screen (absoluteFill) until WebView fires onLoadEnd.
+       * pointerEvents="none" so it never blocks touches if it lingers.
        */}
       {isInitialLoad && (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -323,7 +324,8 @@ export function WebViewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#d5f7f0", // matches splash — no white ever shows through
+    // Mint matches splash — no white gap ever shows through the absoluteFill overlay
+    backgroundColor: "#d5f7f0",
   },
   webViewContainer: {
     flex: 1,
