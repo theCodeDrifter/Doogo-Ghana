@@ -11,7 +11,7 @@ import {
 const { width } = Dimensions.get("window");
 
 // 871×286 — correct aspect ratio so image renders at full visible size
-const LOGO_WIDTH = width * 0.65;
+const LOGO_WIDTH = width * 0.42;
 const LOGO_HEIGHT = (LOGO_WIDTH * 286) / 871;
 const BG_COLOR = "#d5f7f0";
 
