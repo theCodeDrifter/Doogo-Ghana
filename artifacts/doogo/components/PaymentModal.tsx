@@ -11,10 +11,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import WebView, {
-  WebViewNavigation,
-  WebViewErrorEvent,
-} from "react-native-webview";
+import WebView, { WebViewNavigation } from "react-native-webview";
 
 import { INJECTED_META } from "@/utils/injectedJS";
 import { isTrustedUrl } from "@/utils/urlUtils";
@@ -71,7 +68,7 @@ export function PaymentModal({
     setIsLoading(false);
   }, []);
 
-  const handleError = useCallback((_event: WebViewErrorEvent) => {
+  const handleError = useCallback((_event: unknown) => {
     setIsLoading(false);
     setHasError(true);
   }, []);

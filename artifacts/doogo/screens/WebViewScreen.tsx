@@ -12,67 +12,89 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import WebView, {
   WebViewMessageEvent,
   WebViewNavigation,
-  WebViewErrorEvent,
 } from "react-native-webview";
 
+import { LoadingBar } from "@/components/LoadingBar";
 import { OfflineScreen } from "@/components/OfflineScreen";
 import { PaymentModal } from "@/components/PaymentModal";
 import { SkeletonShimmer } from "@/components/SkeletonShimmer";
 import { SplashLoading } from "@/components/SplashLoading";
 import { useNetwork } from "@/hooks/useNetwork";
 import {
-  INJECTED_CSS,
+  initPageCache,
+  urlToCacheKey,
+  cacheKeyToUrl,
+} from "@/services/pageCache";
+import {
+  INJECTED_BEFORE_CONTENT_JS,
   INJECTED_GOOGLE_OAUTH_INTERCEPTOR,
-  INJECTED_META,
 } from "@/utils/injectedJS";
 import { isPrecachePath, isTrustedUrl } from "@/utils/urlUtils";
 
-const HOME_URL = "https://doogo.shop";
+const HOME_URL = "https://doogo.shop/";
 const MY_ACCOUNT_URL = "https://doogo.shop/my-account/";
 
-// Google OAuth — intercepted, opened via ASWebAuthenticationSession / Custom Tab
 const GOOGLE_AUTH_DOMAINS = ["accounts.google.com", "google.com/o/oauth2"];
-
-// Hubtel payment gateway — intercepted, opened in inline payment sheet
 const PAYMENT_DOMAIN = "pay.hubtel.com";
 
-function isGoogleAuthUrl(url: string): boolean {
+function isGoogleAuthUrl(url: string) {
   return GOOGLE_AUTH_DOMAINS.some((d) => url.includes(d));
 }
-
-function isPaymentUrl(url: string): boolean {
+function isPaymentUrl(url: string) {
   return url.includes(PAYMENT_DOMAIN);
 }
 
-const COMBINED_INJECTED_JS =
-  INJECTED_META + "\n" + INJECTED_CSS + "\n" + INJECTED_GOOGLE_OAUTH_INTERCEPTOR;
+// Source type for the WebView
+type WVSource = { uri: string } | { html: string; baseUrl: string };
 
 export function WebViewScreen() {
   const webViewRef = useRef<WebView>(null);
   const { isConnected } = useNetwork();
   const insets = useSafeAreaInsets();
 
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [canGoBack, setCanGoBack] = useState(false);
-  const [isPrecache, setIsPrecache] = useState(true);
+  // ── Source state: switches between { uri } (live) and { html } (cached) ──
+  const [webViewSource, setWebViewSource] = useState<WVSource>({ uri: HOME_URL });
 
-  // ── Payment modal state ────────────────────────────────────────────────────
+  // In-memory cache map, populated from disk by initPageCache
+  const cacheMap = useRef<Map<string, string>>(new Map());
+  // Prevent switching to cached source more than once for initial load
+  const initialSourceSet = useRef(false);
+
+  // ── UI state ──────────────────────────────────────────────────────────────
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLiveLoad, setIsLiveLoad] = useState(false); // drives skeleton shimmer
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  // ── Modal state ───────────────────────────────────────────────────────────
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
 
-  // Guards against duplicate sessions
+  // Guards
   const oauthInProgress = useRef(false);
   const paymentInProgress = useRef(false);
 
-  const reload = useCallback(() => webViewRef.current?.reload(), []);
-  const handleRetry = useCallback(() => reload(), [reload]);
+  // ─── Initialise cache on mount ────────────────────────────────────────────
+  useEffect(() => {
+    initPageCache((key, freshHtml) => {
+      // Background refresh arrived — update in-memory map
+      cacheMap.current.set(key, freshHtml);
+    }).then((diskCache) => {
+      cacheMap.current = diskCache;
+
+      // If home page was cached on disk, serve it instantly instead of the live URI
+      const homeHtml = diskCache.get("home");
+      if (homeHtml && !initialSourceSet.current) {
+        initialSourceSet.current = true;
+        setWebViewSource({ html: homeHtml, baseUrl: "https://doogo.shop/" });
+      }
+    });
+  }, []);
 
   // ─── Android hardware back ────────────────────────────────────────────────
   useEffect(() => {
     if (Platform.OS !== "android") return;
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
-      // If payment modal is open, close it
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       if (paymentModalVisible) {
         setPaymentModalVisible(false);
         paymentInProgress.current = false;
@@ -84,10 +106,10 @@ export function WebViewScreen() {
       }
       return false;
     });
-    return () => backHandler.remove();
+    return () => sub.remove();
   }, [canGoBack, paymentModalVisible]);
 
-  // ─── Google OAuth via system browser ─────────────────────────────────────
+  // ─── Google OAuth ─────────────────────────────────────────────────────────
   const startGoogleAuth = useCallback(async (googleUrl: string) => {
     if (oauthInProgress.current) return;
     oauthInProgress.current = true;
@@ -99,23 +121,20 @@ export function WebViewScreen() {
         { dismissButtonStyle: "cancel", preferEphemeralSession: false, showInRecents: false, createTask: false }
       );
       if (result.type === "success") {
-        const targetUrl =
-          result.url && result.url.startsWith("https://doogo.shop")
-            ? result.url
-            : MY_ACCOUNT_URL;
+        const target =
+          result.url?.startsWith("https://doogo.shop") ? result.url : MY_ACCOUNT_URL;
         webViewRef.current?.injectJavaScript(
-          `window.location.replace('${targetUrl.replace(/'/g, "\\'")}'); true;`
+          `window.location.replace('${target.replace(/'/g, "\\'")}'); true;`
         );
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch {
-      // Silent
     } finally {
       oauthInProgress.current = false;
     }
   }, []);
 
-  // ─── Hubtel payment sheet ─────────────────────────────────────────────────
+  // ─── Hubtel payment ───────────────────────────────────────────────────────
   const openPaymentModal = useCallback((url: string) => {
     if (paymentInProgress.current) return;
     paymentInProgress.current = true;
@@ -124,15 +143,9 @@ export function WebViewScreen() {
     setPaymentModalVisible(true);
   }, []);
 
-  /**
-   * Called by PaymentModal when Hubtel redirects back to doogo.shop.
-   * 1. Close the modal instantly
-   * 2. Navigate the main WebView to the returned doogo.shop URL
-   */
   const handlePaymentReturn = useCallback((doogoUrl: string) => {
     setPaymentModalVisible(false);
     paymentInProgress.current = false;
-    // Small delay ensures modal animation starts closing before WebView navigates
     setTimeout(() => {
       webViewRef.current?.injectJavaScript(
         `window.location.replace('${doogoUrl.replace(/'/g, "\\'")}'); true;`
@@ -145,83 +158,106 @@ export function WebViewScreen() {
     paymentInProgress.current = false;
   }, []);
 
-  // ─── Main WebView event handlers ──────────────────────────────────────────
-  const handleNavigationStateChange = useCallback((navState: WebViewNavigation) => {
-    setCanGoBack(navState.canGoBack);
-    setIsPrecache(isPrecachePath(navState.url));
-    if (!navState.loading) setIsLoading(false);
-  }, []);
-
-  const handleLoadStart = useCallback(() => setIsLoading(true), []);
-
-  const handleLoadEnd = useCallback(() => {
-    setIsLoading(false);
-    if (isInitialLoad) setIsInitialLoad(false);
-  }, [isInitialLoad]);
-
-  /**
-   * Navigation gatekeeper (fires for every URL the main WebView would load):
-   *  1. Hubtel payment URLs  → intercept → open inline payment sheet
-   *  2. Google OAuth URLs    → intercept → open system auth browser
-   *  3. Trusted doogo.shop   → allow
-   *  4. Everything else      → open in device browser
-   */
+  // ─── Navigation gatekeeper ────────────────────────────────────────────────
   const handleShouldStartLoadWithRequest = useCallback(
     (request: { url: string }) => {
       const { url } = request;
 
-      if (url === "about:blank" || url.startsWith("blob:")) return true;
+      if (url === "about:blank" || url.startsWith("blob:") || url.startsWith("data:")) {
+        return true;
+      }
 
-      // ── Hubtel payment redirect ──────────────────────────────────────────
+      // 1. Hubtel payment → payment sheet
       if (isPaymentUrl(url)) {
         openPaymentModal(url);
         return false;
       }
 
-      // ── Google OAuth redirect ────────────────────────────────────────────
+      // 2. Google OAuth → system auth browser
       if (isGoogleAuthUrl(url)) {
         startGoogleAuth(url);
         return false;
       }
 
-      // ── Trusted domain ───────────────────────────────────────────────────
+      // 3. Critical page cached → serve from disk instantly
+      const key = urlToCacheKey(url);
+      if (key !== null && cacheMap.current.has(key)) {
+        const html = cacheMap.current.get(key)!;
+        const baseUrl = cacheKeyToUrl(key);
+        setIsLiveLoad(false);
+        setIsLoading(false);
+        setIsInitialLoad(false);
+        setWebViewSource({ html, baseUrl });
+        return false; // block WebView navigation; source prop handles it
+      }
+
+      // 4. External URL → device browser
       if (!isTrustedUrl(url)) {
         Linking.openURL(url).catch(() => {});
         return false;
       }
 
+      // 5. Live doogo.shop page → allow, show skeleton + loading bar
+      setIsLiveLoad(true);
       return true;
     },
     [openPaymentModal, startGoogleAuth]
   );
+
+  // ─── WebView lifecycle ────────────────────────────────────────────────────
+  const handleNavigationStateChange = useCallback((navState: WebViewNavigation) => {
+    setCanGoBack(navState.canGoBack);
+    if (!navState.loading) setIsLoading(false);
+  }, []);
+
+  const handleLoadStart = useCallback(() => {
+    setIsLoading(true);
+  }, []);
+
+  const handleLoadEnd = useCallback(() => {
+    setIsLoading(false);
+    setIsLiveLoad(false);
+    setIsInitialLoad(false);
+  }, []);
 
   const handleMessage = useCallback(
     (event: WebViewMessageEvent) => {
       try {
         const data = JSON.parse(event.nativeEvent.data);
         if (data.type === "GOOGLE_OAUTH" && data.url) startGoogleAuth(data.url);
-      } catch {
-        // Ignore non-JSON messages
-      }
+      } catch {}
     },
     [startGoogleAuth]
   );
 
-  const handleError = useCallback((_event: WebViewErrorEvent) => setIsLoading(false), []);
-  const handleHttpError = useCallback(() => setIsLoading(false), []);
+  const handleError = useCallback((_event: unknown) => {
+    setIsLoading(false);
+    setIsLiveLoad(false);
+    setIsInitialLoad(false);
+  }, []);
 
-  // ─── Offline guard ────────────────────────────────────────────────────────
+  const handleHttpError = useCallback(() => {
+    setIsLoading(false);
+    setIsLiveLoad(false);
+  }, []);
+
+  // ─── Offline ──────────────────────────────────────────────────────────────
   if (!isConnected) {
-    return <OfflineScreen onRetry={handleRetry} />;
+    return <OfflineScreen onRetry={() => webViewRef.current?.reload()} />;
   }
 
-  const showSkeleton = !isInitialLoad && isLoading && !isPrecache;
+  const showSkeleton = isLiveLoad && isLoading;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Splash shown only on very first load before any content is ready */}
       {isInitialLoad && <SplashLoading />}
 
       <View style={[styles.webViewContainer, isInitialLoad && styles.hidden]}>
+        {/* iOS-style loading bar — shown for every page load */}
+        <LoadingBar loading={isLoading} />
+
+        {/* Skeleton shimmer — only for live (non-cached) loads */}
         {showSkeleton && (
           <View style={StyleSheet.absoluteFill}>
             <SkeletonShimmer />
@@ -229,8 +265,13 @@ export function WebViewScreen() {
         )}
 
         <WebView
+          key={
+            // Force re-mount only when switching between html and uri sources
+            // to prevent stale source issues on Android
+            "html" in webViewSource ? "html" : "uri"
+          }
           ref={webViewRef}
-          source={{ uri: HOME_URL }}
+          source={webViewSource}
           style={styles.webView}
           onNavigationStateChange={handleNavigationStateChange}
           onLoadStart={handleLoadStart}
@@ -239,8 +280,10 @@ export function WebViewScreen() {
           onMessage={handleMessage}
           onError={handleError}
           onHttpError={handleHttpError}
-          injectedJavaScript={COMBINED_INJECTED_JS}
-          injectedJavaScriptBeforeContentLoaded={INJECTED_META}
+          // CSS + viewport injected BEFORE any content renders — zero flash
+          injectedJavaScriptBeforeContentLoaded={INJECTED_BEFORE_CONTENT_JS}
+          // OAuth interceptor runs post-DOM (needs click listeners)
+          injectedJavaScript={INJECTED_GOOGLE_OAUTH_INTERCEPTOR}
           javaScriptEnabled={true}
           domStorageEnabled={true}
           sharedCookiesEnabled={true}
@@ -268,7 +311,7 @@ export function WebViewScreen() {
         />
       </View>
 
-      {/* ── Hubtel payment sheet ─────────────────────────────────────────── */}
+      {/* Hubtel payment sheet */}
       <PaymentModal
         visible={paymentModalVisible}
         paymentUrl={paymentUrl}
