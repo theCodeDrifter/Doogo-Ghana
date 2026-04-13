@@ -265,11 +265,6 @@ export function WebViewScreen() {
         )}
 
         <WebView
-          key={
-            // Force re-mount only when switching between html and uri sources
-            // to prevent stale source issues on Android
-            "html" in webViewSource ? "html" : "uri"
-          }
           ref={webViewRef}
           source={webViewSource}
           style={styles.webView}
@@ -325,14 +320,15 @@ export function WebViewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#d5f7f0",
+    backgroundColor: "#ffffff",
   },
   webViewContainer: {
     flex: 1,
+    backgroundColor: "#ffffff",
   },
   webView: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: "#ffffff",
   },
   hidden: {
     position: "absolute",
