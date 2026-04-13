@@ -55,12 +55,12 @@ export function SkeletonShimmer() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#e6fffa",
     padding: 16,
     gap: 12,
   },
   block: {
-    backgroundColor: "#e8e8e8",
+    backgroundColor: "#b0ddd5",
     borderRadius: 8,
   },
   header: {

@@ -29,7 +29,7 @@ import {
   INJECTED_BEFORE_CONTENT_JS,
   INJECTED_GOOGLE_OAUTH_INTERCEPTOR,
 } from "@/utils/injectedJS";
-import { isTrustedUrl } from "@/utils/urlUtils";
+import { isPrecachePath, isTrustedUrl } from "@/utils/urlUtils";
 
 const HOME_URL = "https://doogo.shop/";
 const MY_ACCOUNT_URL = "https://doogo.shop/my-account/";
@@ -250,7 +250,10 @@ export function WebViewScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.webViewContainer}>
+      {/* Splash shown only on very first load before any content is ready */}
+      {isInitialLoad && <SplashLoading />}
+
+      <View style={[styles.webViewContainer, isInitialLoad && styles.hidden]}>
         {/* iOS-style loading bar — shown for every page load */}
         <LoadingBar loading={isLoading} />
 
@@ -262,7 +265,11 @@ export function WebViewScreen() {
         )}
 
         <WebView
-          key="doogo-webview"
+          key={
+            // Force re-mount only when switching between html and uri sources
+            // to prevent stale source issues on Android
+            "html" in webViewSource ? "html" : "uri"
+          }
           ref={webViewRef}
           source={webViewSource}
           style={styles.webView}
@@ -304,13 +311,6 @@ export function WebViewScreen() {
         />
       </View>
 
-      {/* Splash overlays the WebView until the first page is ready — no blank flash */}
-      {isInitialLoad && (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <SplashLoading />
-        </View>
-      )}
-
       {/* Hubtel payment sheet */}
       <PaymentModal
         visible={paymentModalVisible}
@@ -325,14 +325,19 @@ export function WebViewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#d5f7f0",
   },
   webViewContainer: {
     flex: 1,
-    backgroundColor: "#ffffff",
   },
   webView: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "transparent",
+  },
+  hidden: {
+    position: "absolute",
+    width: 0,
+    height: 0,
+    opacity: 0,
   },
 });

@@ -31,7 +31,7 @@ export function OfflineScreen({ onRetry }: OfflineScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#e6fffa",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: "#f0faf8",
+    backgroundColor: "#d5f7f0",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
