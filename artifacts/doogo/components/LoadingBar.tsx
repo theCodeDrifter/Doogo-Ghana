@@ -1,90 +1,67 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { Animated, Easing, StyleSheet, View } from "react-native";
 
 interface LoadingBarProps {
   loading: boolean;
 }
 
-const BAR_COLOR = "#1a3a32";
+const RING_SIZE = 36;
+const RING_THICKNESS = 3;
+const RING_COLOR = "#1a3a32";
 
 /**
- * iOS Safari-style thin progress bar.
- * Fills smoothly from 0 → ~85% while loading, then snaps to 100% and fades out.
+ * Centered sharp-ring spinner.
+ * Shows while loading=true, fades out when done.
  */
 export function LoadingBar({ loading }: LoadingBarProps) {
-  const progress = useRef(new Animated.Value(0)).current;
+  const rotation = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
-  const fillAnimation = useRef<Animated.CompositeAnimation | null>(null);
+  const spinAnim = useRef<Animated.CompositeAnimation | null>(null);
 
   useEffect(() => {
     if (loading) {
-      // Show immediately, reset to 0, then animate to ~85%
-      fillAnimation.current?.stop();
-      opacity.setValue(1);
-      progress.setValue(0);
+      // Fade in
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 180,
+        useNativeDriver: true,
+      }).start();
 
-      fillAnimation.current = Animated.sequence([
-        // Fast initial burst — feels snappy
-        Animated.timing(progress, {
-          toValue: 0.35,
-          duration: 220,
-          useNativeDriver: false,
-        }),
-        // Medium climb
-        Animated.timing(progress, {
-          toValue: 0.65,
-          duration: 600,
-          useNativeDriver: false,
-        }),
-        // Slow crawl — waiting for server
-        Animated.timing(progress, {
-          toValue: 0.85,
-          duration: 1200,
-          useNativeDriver: false,
-        }),
-        // Hold at 85% — looks like we're waiting for response
-        Animated.timing(progress, {
-          toValue: 0.85,
-          duration: 99999,
-          useNativeDriver: false,
-        }),
-      ]);
-      fillAnimation.current.start();
-    } else {
-      // Complete: jump to 100% then fade
-      fillAnimation.current?.stop();
-      Animated.sequence([
-        Animated.timing(progress, {
+      // Continuous rotation
+      rotation.setValue(0);
+      spinAnim.current = Animated.loop(
+        Animated.timing(rotation, {
           toValue: 1,
-          duration: 180,
-          useNativeDriver: false,
-        }),
-        Animated.delay(120),
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 240,
-          useNativeDriver: false,
-        }),
-      ]).start(() => {
-        progress.setValue(0);
-      });
+          duration: 700,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      spinAnim.current.start();
+    } else {
+      // Fade out, then stop spin
+      spinAnim.current?.stop();
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 260,
+        useNativeDriver: true,
+      }).start();
     }
-  }, [loading, opacity, progress]);
+  }, [loading, opacity, rotation]);
 
-  const widthInterpolated = progress.interpolate({
+  const spin = rotation.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0%", "100%"],
-    extrapolate: "clamp",
+    outputRange: ["0deg", "360deg"],
   });
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={styles.overlay} pointerEvents="none">
       <Animated.View
         style={[
-          styles.bar,
+          styles.ring,
           {
-            width: widthInterpolated,
             opacity,
+            transform: [{ rotate: spin }],
           },
         ]}
       />
@@ -93,22 +70,21 @@ export function LoadingBar({ loading }: LoadingBarProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 2.5,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 999,
-    overflow: "hidden",
   },
-  bar: {
-    height: "100%",
-    backgroundColor: BAR_COLOR,
-    // Subtle glow on the leading edge
-    shadowColor: BAR_COLOR,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 4,
+  ring: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    borderRadius: RING_SIZE / 2,
+    borderWidth: RING_THICKNESS,
+    // One gap = the "open" arc; the other three sides form the visible arc
+    borderTopColor: "transparent",
+    borderRightColor: RING_COLOR,
+    borderBottomColor: RING_COLOR,
+    borderLeftColor: RING_COLOR,
   },
 });

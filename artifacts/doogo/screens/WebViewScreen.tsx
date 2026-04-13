@@ -17,7 +17,6 @@ import WebView, {
 import { LoadingBar } from "@/components/LoadingBar";
 import { OfflineScreen } from "@/components/OfflineScreen";
 import { PaymentModal } from "@/components/PaymentModal";
-import { SkeletonShimmer } from "@/components/SkeletonShimmer";
 import { SplashLoading } from "@/components/SplashLoading";
 import { useNetwork } from "@/hooks/useNetwork";
 import { initPageCache } from "@/services/pageCache";
@@ -58,7 +57,6 @@ export function WebViewScreen() {
   // ── UI state ──────────────────────────────────────────────────────────────
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLiveLoad, setIsLiveLoad] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
 
   // ── Modal state ───────────────────────────────────────────────────────────
@@ -197,7 +195,6 @@ export function WebViewScreen() {
       }
 
       // Trusted doogo.shop URL → let WebView navigate natively (back stack preserved)
-      setIsLiveLoad(true);
       return true;
     },
     [openPaymentModal, startGoogleAuth]
@@ -217,7 +214,6 @@ export function WebViewScreen() {
 
   const handleLoadEnd = useCallback(() => {
     setIsLoading(false);
-    setIsLiveLoad(false);
     setIsInitialLoad(false);
   }, []);
 
@@ -234,13 +230,11 @@ export function WebViewScreen() {
 
   const handleError = useCallback((_event: unknown) => {
     setIsLoading(false);
-    setIsLiveLoad(false);
     setIsInitialLoad(false);
   }, []);
 
   const handleHttpError = useCallback(() => {
     setIsLoading(false);
-    setIsLiveLoad(false);
   }, []);
 
   // ─── Offline ──────────────────────────────────────────────────────────────
@@ -248,19 +242,11 @@ export function WebViewScreen() {
     return <OfflineScreen onRetry={() => webViewRef.current?.reload()} />;
   }
 
-  const showSkeleton = isLiveLoad && isLoading;
-
   return (
     <View style={styles.container}>
       {/* WebView always rendered at full size with status bar padding */}
       <View style={[styles.webViewContainer, { paddingTop: insets.top }]}>
         <LoadingBar loading={isLoading} />
-
-        {showSkeleton && (
-          <View style={StyleSheet.absoluteFill}>
-            <SkeletonShimmer />
-          </View>
-        )}
 
         <WebView
           ref={webViewRef}
