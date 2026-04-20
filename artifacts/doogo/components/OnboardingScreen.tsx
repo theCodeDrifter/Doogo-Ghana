@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const AUTO_DISMISS_MS = 10_000;
+const AUTO_DISMISS_MS = 30_000;
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const LOGO_WIDTH = Math.min(SCREEN_WIDTH * 0.5, 280);
 
