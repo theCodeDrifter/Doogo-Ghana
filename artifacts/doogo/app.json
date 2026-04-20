@@ -8,11 +8,6 @@
     "scheme": "doogo",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/splash_logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#e6fffa"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.palipali.doogo",
@@ -40,6 +35,15 @@
         "expo-router",
         {
           "origin": "https://replit.com/"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash_logo.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#d5f7f0"
         }
       ],
       "expo-font",

@@ -9,6 +9,14 @@ export const CSS_OVERRIDES = `
   .elementor-element-a6cfc58 { display: none !important; }
   .elementor-element-5abdb2 { display: none !important; }
   .elementor-element-3271f048 { display: none !important; }
+  /* Hide the original mobile bottom panel — replaced by native iOS liquid glass tab bar */
+  .et-mobile-panel-wrapper,
+  .et-fixed-mobile-panel,
+  #et-mobile-panel,
+  .et_pb_mobile_menu,
+  .et-mobile-bar { display: none !important; visibility: hidden !important; }
+  /* Reserve space at the bottom so content isn't hidden under the native tab bar (~92pt + safe-area) */
+  body { padding-bottom: 110px !important; }
   body, html { overflow-x: hidden !important; max-width: 100vw !important; }
   * { touch-action: pan-x pan-y !important; }
 `;
@@ -112,6 +120,46 @@ export const INJECTED_GOOGLE_OAUTH_INTERCEPTOR = `
 })();
 true;
 `;
+
+/**
+ * Builds a JS snippet that triggers the website's existing cart modal/popup.
+ * The original Divi/Elementor mobile navbar's cart icon opens a modal rather
+ * than navigating to /cart/. This tries the most common cart-toggle selectors
+ * and falls back to navigating to the cart page if none are found.
+ */
+export const TRIGGER_CART_MODAL_JS = `
+(function() {
+  var selectors = [
+    '.et-cart-info',
+    '.et-cart-info-container a',
+    '.et_pb_menu__cart-button',
+    '.elementor-menu-cart__toggle',
+    '.elementor-menu-cart__toggle a',
+    '.menu-cart-toggle',
+    '.cart-contents',
+    'a.cart-customlocation',
+    'a[href*="?wc-ajax=get_refreshed_fragments"]',
+    'a[href$="/cart/"]'
+  ];
+  for (var i = 0; i < selectors.length; i++) {
+    var el = document.querySelector(selectors[i]);
+    if (el) {
+      try { el.click(); return; } catch (e) {}
+    }
+  }
+  // Fallback — open the cart page directly
+  window.location.href = 'https://doogo.shop/cart/';
+})();
+true;
+`;
+
+/**
+ * Builds a JS snippet that navigates the WebView to a target URL while
+ * preserving the native back-forward stack. Used by the liquid-glass tab bar.
+ */
+export function buildNavigateJS(url: string): string {
+  return `window.location.href = ${JSON.stringify(url)}; true;`;
+}
 
 /** Legacy alias kept for any remaining imports */
 export const INJECTED_META = INJECTED_BEFORE_CONTENT_JS;

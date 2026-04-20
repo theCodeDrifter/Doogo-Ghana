@@ -14,6 +14,7 @@ import WebView, {
   WebViewNavigation,
 } from "react-native-webview";
 
+import { LiquidGlassTabBar, TabKey } from "@/components/LiquidGlassTabBar";
 import { LoadingBar } from "@/components/LoadingBar";
 import { OfflineScreen } from "@/components/OfflineScreen";
 import { PaymentModal } from "@/components/PaymentModal";
@@ -21,10 +22,32 @@ import { SplashLoading } from "@/components/SplashLoading";
 import { useNetwork } from "@/hooks/useNetwork";
 import { initPageCache } from "@/services/pageCache";
 import {
+  buildNavigateJS,
   INJECTED_BEFORE_CONTENT_JS,
   INJECTED_GOOGLE_OAUTH_INTERCEPTOR,
+  TRIGGER_CART_MODAL_JS,
 } from "@/utils/injectedJS";
 import { isTrustedUrl } from "@/utils/urlUtils";
+
+const TAB_URLS: Record<Exclude<TabKey, "cart">, string> = {
+  home: "https://doogo.shop/",
+  shop: "https://doogo.shop/shop/",
+  wishlist: "https://doogo.shop/wishlist/",
+  account: "https://doogo.shop/my-account/",
+};
+
+function urlToTab(url: string): TabKey | null {
+  try {
+    const path = new URL(url).pathname.replace(/\/$/, "");
+    if (path === "" || path === "/") return "home";
+    if (path === "/shop") return "shop";
+    if (path === "/wishlist") return "wishlist";
+    if (path === "/my-account") return "account";
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 const HOME_URL = "https://doogo.shop/";
 const MY_ACCOUNT_URL = "https://doogo.shop/my-account/";
@@ -58,6 +81,7 @@ export function WebViewScreen() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey | null>("home");
 
   // ── Modal state ───────────────────────────────────────────────────────────
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
@@ -204,9 +228,25 @@ export function WebViewScreen() {
   const handleNavigationStateChange = useCallback(
     (navState: WebViewNavigation) => {
       setCanGoBack(navState.canGoBack);
+      const tab = urlToTab(navState.url);
+      setActiveTab(tab);
     },
     []
   );
+
+  // ─── Liquid-glass tab bar ─────────────────────────────────────────────────
+  const handleTabPress = useCallback((key: TabKey) => {
+    if (key === "cart") {
+      // Replicates the original navbar's cart icon behaviour: open the cart
+      // modal/popup on the current page rather than navigating to /cart/.
+      webViewRef.current?.injectJavaScript(TRIGGER_CART_MODAL_JS);
+      return;
+    }
+    const target = TAB_URLS[key];
+    if (!target) return;
+    setActiveTab(key);
+    webViewRef.current?.injectJavaScript(buildNavigateJS(target));
+  }, []);
 
   const handleLoadStart = useCallback(() => {
     setIsLoading(true);
@@ -303,6 +343,11 @@ export function WebViewScreen() {
         onReturnToShop={handlePaymentReturn}
         onDismiss={handlePaymentDismiss}
       />
+
+      {/* iOS 26 liquid-glass tab bar — sits above the WebView */}
+      {!isInitialLoad && (
+        <LiquidGlassTabBar active={activeTab} onTabPress={handleTabPress} />
+      )}
     </View>
   );
 }
