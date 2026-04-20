@@ -24,14 +24,15 @@ import { initPageCache } from "@/services/pageCache";
 import {
   INJECTED_BEFORE_CONTENT_JS,
   INJECTED_GOOGLE_OAUTH_INTERCEPTOR,
-  TRIGGER_CART_MODAL_JS,
+  TRIGGER_CART_HEADER_JS,
+  TRIGGER_WISHLIST_HEADER_JS,
 } from "@/utils/injectedJS";
 import { isTrustedUrl } from "@/utils/urlUtils";
 
-const TAB_URLS: Record<Exclude<TabKey, "cart">, string> = {
+// Tabs that navigate to a page (wishlist & cart trigger header icons instead)
+const TAB_URLS: Record<"home" | "shop" | "account", string> = {
   home: "https://doogo.shop/",
   shop: "https://doogo.shop/shop/",
-  wishlist: "https://doogo.shop/wishlist/",
   account: "https://doogo.shop/my-account/",
 };
 
@@ -245,23 +246,24 @@ export function WebViewScreen() {
   // ─── Liquid-glass tab bar ─────────────────────────────────────────────────
   const handleTabPress = useCallback((key: TabKey) => {
     if (key === "cart") {
-      // Replicates the original navbar's cart icon: open the cart modal/popup
-      // on the current page — no navigation occurs.
-      webViewRef.current?.injectJavaScript(TRIGGER_CART_MODAL_JS);
+      // Clicks the cart icon in the site's header — opens cart modal, no navigation.
+      webViewRef.current?.injectJavaScript(TRIGGER_CART_HEADER_JS);
       return;
     }
-    const baseUrl = TAB_URLS[key];
+    if (key === "wishlist") {
+      // Clicks the favourites/wishlist icon in the site's header — no navigation.
+      webViewRef.current?.injectJavaScript(TRIGGER_WISHLIST_HEADER_JS);
+      return;
+    }
+    const baseUrl = TAB_URLS[key as "home" | "shop" | "account"];
     if (!baseUrl) return;
     setActiveTab(key);
 
     const cached = pageCacheRef.current.get(key);
     if (cached) {
-      // Serve the pre-cached HTML directly — truly instant, zero network.
-      // Suppress the loading bar since there's nothing to "load".
       suppressLoadingBar.current = true;
       setWebViewSource({ html: cached, baseUrl });
     } else {
-      // No cache yet — fall back to a live URI load (will be fast via HTTP cache)
       suppressLoadingBar.current = false;
       setWebViewSource({ uri: baseUrl });
     }

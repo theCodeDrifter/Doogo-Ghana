@@ -1,5 +1,6 @@
-import { SymbolView, SymbolViewProps } from "expo-symbols";
 import * as Haptics from "expo-haptics";
+import { BlurView } from "expo-blur";
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import React, { useCallback } from "react";
 import {
   Platform,
@@ -8,30 +9,57 @@ import {
   Text,
   View,
 } from "react-native";
-import { BlurView } from "expo-blur";
-import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+
+import {
+  HomeIcon,
+  ShopIcon,
+  WishlistIcon,
+  CartIcon,
+  AccountIcon,
+} from "@/components/NavIcons";
 
 export type TabKey = "home" | "shop" | "wishlist" | "cart" | "account";
 
 type TabDef = {
   key: TabKey;
   label: string;
-  sfSymbol: SymbolViewProps["name"];
-  ionicon: keyof typeof Ionicons.glyphMap;
 };
 
 const TABS: TabDef[] = [
-  { key: "home",     label: "Home",     sfSymbol: "house.fill",                    ionicon: "home" },
-  { key: "shop",     label: "Shop",     sfSymbol: "bag.fill",                      ionicon: "bag" },
-  { key: "wishlist", label: "Wishlist", sfSymbol: "heart.fill",                    ionicon: "heart" },
-  { key: "cart",     label: "Cart",     sfSymbol: "cart.fill",                     ionicon: "cart" },
-  { key: "account",  label: "Account",  sfSymbol: "person.crop.circle.fill",       ionicon: "person-circle" },
+  { key: "home",     label: "Home"     },
+  { key: "shop",     label: "Shop"     },
+  { key: "wishlist", label: "Wishlist" },
+  { key: "cart",     label: "Cart"     },
+  { key: "account",  label: "Account"  },
 ];
 
-const ACCENT = "#1a3a32";
-const INACTIVE = "rgba(60, 60, 67, 0.6)";
+const ACTIVE_COLOR  = "#1a3a32";
+const INACTIVE_COLOR = "rgba(60, 60, 67, 0.55)";
+
+function TabIcon({
+  tabKey,
+  isActive,
+}: {
+  tabKey: TabKey;
+  isActive: boolean;
+}) {
+  const color = isActive ? ACTIVE_COLOR : INACTIVE_COLOR;
+  const size = 26;
+
+  switch (tabKey) {
+    case "home":
+      return <HomeIcon color={color} size={size} />;
+    case "shop":
+      return <ShopIcon color={color} size={size} />;
+    case "wishlist":
+      return <WishlistIcon color={color} size={size} />;
+    case "cart":
+      return <CartIcon color={color} size={size} />;
+    case "account":
+      return <AccountIcon color={color} size={size} />;
+  }
+}
 
 type Props = {
   active: TabKey | null;
@@ -54,7 +82,7 @@ export function LiquidGlassTabBar({ active, onTabPress }: Props) {
     <View style={styles.row}>
       {TABS.map((tab) => {
         const isActive = active === tab.key;
-        const tint = isActive ? ACCENT : INACTIVE;
+        const tint = isActive ? ACTIVE_COLOR : INACTIVE_COLOR;
         return (
           <Pressable
             key={tab.key}
@@ -67,17 +95,7 @@ export function LiquidGlassTabBar({ active, onTabPress }: Props) {
             accessibilityRole="button"
             accessibilityLabel={tab.label}
           >
-            {Platform.OS === "ios" ? (
-              <SymbolView
-                name={tab.sfSymbol}
-                size={26}
-                tintColor={tint}
-                weight="semibold"
-                resizeMode="scaleAspectFit"
-              />
-            ) : (
-              <Ionicons name={tab.ionicon} size={26} color={tint} />
-            )}
+            <TabIcon tabKey={tab.key} isActive={isActive} />
             <Text style={[styles.label, { color: tint }]}>{tab.label}</Text>
           </Pressable>
         );
@@ -115,7 +133,6 @@ const styles = StyleSheet.create({
     left: 12,
     right: 12,
     bottom: 0,
-    paddingHorizontal: 0,
   },
   glass: {
     borderRadius: 28,
@@ -130,10 +147,10 @@ const styles = StyleSheet.create({
   },
   fallbackOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,255,255,0.35)",
+    backgroundColor: "rgba(255,255,255,0.42)",
   },
   androidSolid: {
-    backgroundColor: "rgba(255,255,255,0.92)",
+    backgroundColor: "rgba(255,255,255,0.93)",
   },
   row: {
     flexDirection: "row",
@@ -150,7 +167,7 @@ const styles = StyleSheet.create({
   },
   tabPressed: {
     opacity: 0.55,
-    transform: [{ scale: 0.96 }],
+    transform: [{ scale: 0.93 }],
   },
   label: {
     fontSize: 10,

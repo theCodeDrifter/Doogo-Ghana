@@ -16,7 +16,8 @@ export const CSS_OVERRIDES = `
   .et_pb_mobile_menu,
   .et-mobile-bar { display: none !important; visibility: hidden !important; }
   /* Reserve space at the bottom so content isn't hidden under the native tab bar (~92pt + safe-area) */
-  body { padding-bottom: 110px !important; }
+  body { padding-bottom: 110px !important; background-color: #f3f8f7 !important; }
+  html { background-color: #f3f8f7 !important; }
   body, html { overflow-x: hidden !important; max-width: 100vw !important; }
   * { touch-action: pan-x pan-y !important; }
 `;
@@ -122,70 +123,89 @@ true;
 `;
 
 /**
- * Builds a JS snippet that triggers the website's existing cart modal/popup.
- * The original Divi/Elementor mobile navbar's cart icon opens a modal rather
- * than navigating to /cart/. This tries the most common cart-toggle selectors
- * and falls back to navigating to the cart page if none are found.
+ * Triggers the cart icon in the site's header (top-right area).
+ * Mirrors what the original website's navbar cart button does —
+ * opens the cart modal/popup without navigating away.
  */
-export const TRIGGER_CART_MODAL_JS = `
+export const TRIGGER_CART_HEADER_JS = `
 (function() {
-  // Strategy 1: WooCommerce Blocks mini-cart button (modern themes)
-  var blockCart = document.querySelector('.wc-block-mini-cart__button, .wp-block-woocommerce-mini-cart');
-  if (blockCart) { try { blockCart.click(); return; } catch(e) {} }
-
-  // Strategy 2: Divi theme cart elements (any visibility)
-  var diviSelectors = [
-    '.et-cart-info',
-    '.et-cart-info-container a',
-    '.et_pb_menu .et-cart-info',
-    '#et-top-navigation .et-cart-info',
-    '.et_pb_menu_cart_icon',
-    '.et_pb_menu__cart-button'
+  var headerRoots = [
+    '#main-header',
+    '#et-top-navigation',
+    '#top-header',
+    'header',
+    '.et-l--header',
+    '#page-container'
   ];
-  for (var i = 0; i < diviSelectors.length; i++) {
-    var el = document.querySelector(diviSelectors[i]);
-    if (el) { try { el.click(); return; } catch(e) {} }
-  }
-
-  // Strategy 3: Elementor menu-cart toggle
-  var elemSelectors = [
+  var cartSelectors = [
+    '.et-cart-info',
+    '.et-cart-info a',
+    '.et-cart-info-container a',
+    '.et_pb_menu__cart-button',
     '.elementor-menu-cart__toggle',
     '.elementor-menu-cart__toggle a',
-    '.elementor-menu-cart__toggle button'
+    '.wc-block-mini-cart__button',
+    '.cart-contents',
+    '[class*="header-cart"] a',
+    '[class*="cart-icon"] a'
   ];
-  for (var j = 0; j < elemSelectors.length; j++) {
-    var el2 = document.querySelector(elemSelectors[j]);
-    if (el2) { try { el2.click(); return; } catch(e) {} }
-  }
-
-  // Strategy 4: Find and click the cart button inside the hidden Divi mobile panel
-  // (temporarily make it accessible, click, then immediately rehide)
-  var panel = document.querySelector('.et-mobile-panel-wrapper, .et-fixed-mobile-panel, #et-mobile-panel');
-  if (panel) {
-    var prevDisplay = panel.style.display;
-    var prevVisibility = panel.style.visibility;
-    panel.style.setProperty('display', 'block', 'important');
-    panel.style.setProperty('visibility', 'visible', 'important');
-    var cartInPanel = panel.querySelector('[class*="cart"], a[href*="cart"]');
-    if (cartInPanel) {
-      try { cartInPanel.click(); } catch(e) {}
-      panel.style.display = prevDisplay;
-      panel.style.visibility = prevVisibility;
-      return;
+  for (var h = 0; h < headerRoots.length; h++) {
+    var root = document.querySelector(headerRoots[h]);
+    if (!root) continue;
+    for (var i = 0; i < cartSelectors.length; i++) {
+      var el = root.querySelector(cartSelectors[i]);
+      if (el) { try { el.click(); return; } catch(e) {} }
     }
-    panel.style.display = prevDisplay;
-    panel.style.visibility = prevVisibility;
   }
-
-  // Strategy 5: jQuery-based Divi/WooCommerce event triggers
+  // jQuery fallback for Divi/WooCommerce
   if (window.jQuery) {
-    var $ = window.jQuery;
-    if ($('.et-cart-info').length) { $('.et-cart-info').trigger('click'); return; }
-    if ($('.elementor-menu-cart__toggle').length) { $('.elementor-menu-cart__toggle').trigger('click'); return; }
-    $(document.body).trigger('wc_fragment_refresh');
+    var $cart = window.jQuery('#main-header .et-cart-info, #et-top-navigation .et-cart-info, header .elementor-menu-cart__toggle').first();
+    if ($cart.length) { $cart.trigger('click'); }
   }
+})();
+true;
+`;
 
-  // No navigation fallback — do nothing if cart modal can't be found
+/**
+ * Triggers the wishlist/favorites icon in the site's header (top-right area).
+ * Opens the wishlist panel/page without full navigation where possible.
+ */
+export const TRIGGER_WISHLIST_HEADER_JS = `
+(function() {
+  var headerRoots = [
+    '#main-header',
+    '#et-top-navigation',
+    '#top-header',
+    'header',
+    '.et-l--header',
+    '#page-container'
+  ];
+  var wishlistSelectors = [
+    '[class*="wishlist"]',
+    '[class*="favourite"]',
+    '[class*="favorite"]',
+    '.yith-wcwl-wishlist-icon',
+    '.ti-wishlists-icon',
+    'a[href*="wishlist"]',
+    '[data-wishlists-count]',
+    '.header-wishlist a',
+    '[aria-label*="wishlist" i]',
+    '[aria-label*="favourite" i]',
+    '[title*="wishlist" i]'
+  ];
+  for (var h = 0; h < headerRoots.length; h++) {
+    var root = document.querySelector(headerRoots[h]);
+    if (!root) continue;
+    for (var i = 0; i < wishlistSelectors.length; i++) {
+      var el = root.querySelector(wishlistSelectors[i]);
+      if (el) { try { el.click(); return; } catch(e) {} }
+    }
+  }
+  // jQuery fallback
+  if (window.jQuery) {
+    var $wl = window.jQuery('#main-header [class*="wishlist"], header [class*="wishlist"]').first();
+    if ($wl.length) { $wl.trigger('click'); }
+  }
 })();
 true;
 `;
