@@ -1,0 +1,178 @@
+Favories/Wishlist off-canvas toggle
+<div class="elementor-element elementor-element-3fe9a4a elementor-widget__width-auto etheme-elementor-off-canvas-toggle-content etheme-elementor-off-canvas-zero-quantity-yes etheme-elementor-off-canvas__toggle-qty-top etheme-elementor-off-canvas-right etheme-elementor-off-canvas etheme-elementor-off-canvas-design-separated etheme-elementor-widget-loaded elementor-widget elementor-widget-theme-etheme_wishlist" data-id="3fe9a4a" data-element_type="widget" data-e-type="widget" data-settings="{&quot;off_canvas_toggle_type&quot;:&quot;click&quot;}" data-widget_type="theme-etheme_wishlist.default">
+				<div class="elementor-widget-container">
+					        <div class="etheme-elementor-off-canvas__wrapper">
+            <div class="etheme-elementor-off-canvas__toggle_wrapper">
+                                <div class="etheme-elementor-off-canvas__container elementor-lightbox" aria-hidden="false">
+                    <div class="etheme-elementor-off-canvas__main" aria-hidden="false">
+                                                    <div class="etheme-elementor-off-canvas__close-button outside">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M13.056 12l10.728-10.704c0.144-0.144 0.216-0.336 0.216-0.552 0-0.192-0.072-0.384-0.216-0.528-0.144-0.12-0.336-0.216-0.528-0.216 0 0 0 0 0 0-0.192 0-0.408 0.072-0.528 0.216l-10.728 10.728-10.704-10.728c-0.288-0.288-0.768-0.288-1.056 0-0.168 0.144-0.24 0.336-0.24 0.528 0 0.216 0.072 0.408 0.216 0.552l10.728 10.704-10.728 10.704c-0.144 0.144-0.216 0.336-0.216 0.552s0.072 0.384 0.216 0.528c0.288 0.288 0.768 0.288 1.056 0l10.728-10.728 10.704 10.704c0.144 0.144 0.336 0.216 0.528 0.216s0.384-0.072 0.528-0.216c0.144-0.144 0.216-0.336 0.216-0.528s-0.072-0.384-0.216-0.528l-10.704-10.704z"></path>
+                                </svg>
+                            </div>
+                                                    <div class="etheme-elementor-off-canvas_content-head">
+                                        <a href="https://doogo.shop/my-account/?et-wishlist-page" class="flex justify-content-center flex-wrap align-items-center">
+                        <span class="etheme-elementor-off-canvas_content-head-icon text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17" fill="none"><path d="M17.0063 1.56173C17.897 2.32868 18.4908 3.24408 18.7877 4.30792C19.0845 5.34701 19.0969 6.349 18.8248 7.31388C18.5526 8.27875 18.0826 9.10756 17.4146 9.80029L10.9202 16.406C10.5244 16.8018 10.0543 16.9997 9.51 16.9997C8.96571 16.9997 8.49564 16.8018 8.0998 16.406L1.60544 9.80029C0.937447 9.10756 0.467379 8.27875 0.195234 7.31388C-0.0769104 6.32426 -0.0645402 5.3099 0.232345 4.2708C0.52923 3.23171 1.123 2.32868 2.01365 1.56173C3.07749 0.671075 4.32688 0.287598 5.76183 0.4113C7.22151 0.510262 8.4709 1.07929 9.51 2.11839C10.5491 1.07929 11.7861 0.510262 13.2211 0.4113C14.6807 0.287598 15.9425 0.671075 17.0063 1.56173ZM16.1528 8.53853C16.8703 7.79631 17.229 6.89329 17.229 5.82945C17.229 4.74087 16.7837 3.776 15.893 2.93482C15.1508 2.34105 14.2849 2.08128 13.2953 2.1555C12.3304 2.22972 11.5016 2.62557 10.8089 3.34304L9.51 4.64191L8.21113 3.34304C7.5184 2.62557 6.67722 2.22972 5.68761 2.1555C4.72273 2.08128 3.86919 2.34105 3.12697 2.93482C2.23632 3.776 1.79099 4.74087 1.79099 5.82945C1.79099 6.89329 2.14973 7.79631 2.8672 8.53853L9.39867 15.1442C9.47289 15.2432 9.54711 15.2432 9.62133 15.1442L16.1528 8.53853Z" fill="black"></path></svg>                            </span>
+        
+                            <span class="etheme-elementor-off-canvas_content-head-label">
+                    Favorites                </span>
+                    </a>
+                                    </div>
+                                                <div class="etheme-elementor-off-canvas_content">
+                            <div class="et_b_wishlist-dropdown product_list_widget cart_list"><!--            <div class="woocommerce-mini-cart__empty-message empty">-->
+            <div class="etheme-elementor-off-canvas_content-empty-message">
+                <p class="text-center">No products in the wishlist.</p>
+                    <div class="text-center">
+                <a class="btn medium" href="https://doogo.shop/shop/"><span>Return To Shop</span></a>
+            </div>
+                    </div>
+        </div>                        </div>
+                                                    <div class="etheme-elementor-off-canvas_content-footer">
+                                        <div class="woocommerce-mini-cart__footer-wrapper">
+            <div class="product_list-popup-footer-wrapper" style="display: none">
+                <p class="buttons mini-cart-buttons">
+                                        <a href="https://doogo.shop/my-account/?et-wishlist-page" class="button btn-view-wishlist wc-forward">View Wishlist</a>
+                                           <a href="https://doogo.shop/my-account/?et-wishlist-page" class="button btn-checkout add-all-products">Add all to cart</a>
+                                   </p>
+            </div>
+        </div>
+                                    </div>
+                                            </div>
+                </div>
+                                <div class="etheme-elementor-off-canvas__toggle elementor-button-wrapper">
+                            <div class="elementor-button-wrapper">
+            <a class="elementor-button elementor-button-link etheme-elementor-off-canvas__toggle_button" href="https://doogo.shop/my-account/?et-wishlist-page" rel="nofollow noopener" role="button" aria-expanded="false" data-e-disable-page-transition="true" aria-label="Favorites">
+                <span class="elementor-button-content-wrapper flex-wrap">
+                                <span class="elementor-button-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17" fill="none"><path d="M17.0063 1.56173C17.897 2.32868 18.4908 3.24408 18.7877 4.30792C19.0845 5.34701 19.0969 6.349 18.8248 7.31388C18.5526 8.27875 18.0826 9.10756 17.4146 9.80029L10.9202 16.406C10.5244 16.8018 10.0543 16.9997 9.51 16.9997C8.96571 16.9997 8.49564 16.8018 8.0998 16.406L1.60544 9.80029C0.937447 9.10756 0.467379 8.27875 0.195234 7.31388C-0.0769104 6.32426 -0.0645402 5.3099 0.232345 4.2708C0.52923 3.23171 1.123 2.32868 2.01365 1.56173C3.07749 0.671075 4.32688 0.287598 5.76183 0.4113C7.22151 0.510262 8.4709 1.07929 9.51 2.11839C10.5491 1.07929 11.7861 0.510262 13.2211 0.4113C14.6807 0.287598 15.9425 0.671075 17.0063 1.56173ZM16.1528 8.53853C16.8703 7.79631 17.229 6.89329 17.229 5.82945C17.229 4.74087 16.7837 3.776 15.893 2.93482C15.1508 2.34105 14.2849 2.08128 13.2953 2.1555C12.3304 2.22972 11.5016 2.62557 10.8089 3.34304L9.51 4.64191L8.21113 3.34304C7.5184 2.62557 6.67722 2.22972 5.68761 2.1555C4.72273 2.08128 3.86919 2.34105 3.12697 2.93482C2.23632 3.776 1.79099 4.74087 1.79099 5.82945C1.79099 6.89329 2.14973 7.79631 2.8672 8.53853L9.39867 15.1442C9.47289 15.2432 9.54711 15.2432 9.62133 15.1442L16.1528 8.53853Z" fill="black"></path></svg>                        <span class="elementor-button-icon-qty" data-counter="0">
+            0        </span>
+                    </span>
+                    <span class="button-text full-width elementor-hidden-tablet elementor-hidden-mobile">
+                Favorites            </span>
+        
+                        </span>
+            </a>
+        </div>
+                        </div>
+
+            </div>
+        </div>
+        				</div>
+				</div>
+
+
+
+Cart off-canvas
+
+<div class="elementor-element elementor-element-f5d54a4 elementor-widget__width-auto etheme-elementor-off-canvas-toggle-content etheme-elementor-off-canvas-zero-quantity-yes etheme-elementor-off-canvas__toggle-qty-top etheme-elementor-off-canvas-right etheme-elementor-off-canvas etheme-elementor-off-canvas-design-separated etheme-elementor-off-canvas-products-has-quantity-input etheme-elementor-widget-loaded elementor-widget elementor-widget-theme-etheme_cart" data-id="f5d54a4" data-element_type="widget" data-e-type="widget" data-settings="{&quot;automatically_open_canvas&quot;:&quot;yes&quot;,&quot;linked_products&quot;:&quot;cross-sell&quot;,&quot;off_canvas_toggle_type&quot;:&quot;click&quot;}" data-widget_type="theme-etheme_cart.default">
+				<div class="elementor-widget-container">
+					        <div class="etheme-elementor-off-canvas__wrapper">
+            <div class="etheme-elementor-off-canvas__toggle_wrapper">
+                                <div class="etheme-elementor-off-canvas__container elementor-lightbox" aria-hidden="true">
+                    <div class="etheme-elementor-off-canvas__main" aria-hidden="true">
+                                                    <div class="etheme-elementor-off-canvas__close-button outside">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M13.056 12l10.728-10.704c0.144-0.144 0.216-0.336 0.216-0.552 0-0.192-0.072-0.384-0.216-0.528-0.144-0.12-0.336-0.216-0.528-0.216 0 0 0 0 0 0-0.192 0-0.408 0.072-0.528 0.216l-10.728 10.728-10.704-10.728c-0.288-0.288-0.768-0.288-1.056 0-0.168 0.144-0.24 0.336-0.24 0.528 0 0.216 0.072 0.408 0.216 0.552l10.728 10.704-10.728 10.704c-0.144 0.144-0.216 0.336-0.216 0.552s0.072 0.384 0.216 0.528c0.288 0.288 0.768 0.288 1.056 0l10.728-10.728 10.704 10.704c0.144 0.144 0.336 0.216 0.528 0.216s0.384-0.072 0.528-0.216c0.144-0.144 0.216-0.336 0.216-0.528s-0.072-0.384-0.216-0.528l-10.704-10.704z"></path>
+                                </svg>
+                            </div>
+                                                    <div class="etheme-elementor-off-canvas_content-head">
+                                        <a href="https://doogo.shop/cart/" class="flex justify-content-center flex-wrap align-items-center">
+                        <span class="etheme-elementor-off-canvas_content-head-icon text-center">
+                <i aria-hidden="true" class="et-icon et-shopping-cart"></i>                            </span>
+        
+                            <span class="etheme-elementor-off-canvas_content-head-label">
+                    My Cart                </span>
+                    </a>
+                                    </div>
+                                                <div class="etheme-elementor-off-canvas_content">
+                            <div class="widget woocommerce widget_shopping_cart"><div class="widget_shopping_cart_content">
+
+<div class="woocommerce-mini-cart cart_list product_list_widget ">
+
+	
+            <ul class="cart-widget-products clearfix">
+				                        <li class="woocommerce-mini-cart-item mini_cart_item" data-key="c0c10e7df6bfbc2ecc1e48eb3ac5bc52">
+							<a role="button" href="https://doogo.shop/cart/?remove_item=c0c10e7df6bfbc2ecc1e48eb3ac5bc52&amp;_wpnonce=d5a9d4b942" class="remove remove_from_cart_button" aria-label="Remove LG 75 Inch UHD AI UT80 4K Smart TV AI Magic remote HDR10 webOS24 - 75UT80006LA from cart" data-product_id="201909" data-cart_item_key="c0c10e7df6bfbc2ecc1e48eb3ac5bc52" data-product_sku="" data-success_message="“LG 75 Inch UHD AI UT80 4K Smart TV AI Magic remote HDR10 webOS24 - 75UT80006LA” has been removed from your cart"><i class="et-icon et-delete et-remove-type1"></i><i class="et-trash-wrap et-remove-type2"><img src="https://doogo.shop/wp-content/themes/xstore/theme/assets/images/trash-bin.gif" alt="Remove LG 75 Inch UHD AI UT80 4K Smart TV AI Magic remote HDR10 webOS24 - 75UT80006LA from cart"></i></a>							                                <a href="https://doogo.shop/product/lg-75-inch-uhd-ai-ut80-4k-smart-tv-ai-magic-remote-hdr10-webos24-75ut80006la-2/" class="product-mini-image">
+									<img width="300" height="300" src="//doogo.shop/wp-content/uploads/2026/03/1851196200207766-300x300.jpeg" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail" alt="LG 75 Inch UHD AI UT80 4K Smart TV AI Magic remote HDR10 webOS24 - 75UT80006LA" decoding="async" srcset="//doogo.shop/wp-content/uploads/2026/03/1851196200207766-300x300.jpeg 300w, //doogo.shop/wp-content/uploads/2026/03/1851196200207766-1024x1024.jpeg 1024w, //doogo.shop/wp-content/uploads/2026/03/1851196200207766-150x150.jpeg 150w, //doogo.shop/wp-content/uploads/2026/03/1851196200207766-768x768.jpeg 768w, //doogo.shop/wp-content/uploads/2026/03/1851196200207766-1536x1536.jpeg 1536w, //doogo.shop/wp-content/uploads/2026/03/1851196200207766-600x600.jpeg 600w, //doogo.shop/wp-content/uploads/2026/03/1851196200207766-100x100.jpeg 100w, //doogo.shop/wp-content/uploads/2026/03/1851196200207766-1x1.jpeg 1w, //doogo.shop/wp-content/uploads/2026/03/1851196200207766-10x10.jpeg 10w, //doogo.shop/wp-content/uploads/2026/03/1851196200207766.jpeg 2048w" sizes="(max-width: 300px) 100vw, 300px">                                </a>
+							                            <div class="product-item-right">
+                                <h4 class="product-title">
+                                    <a href="https://doogo.shop/product/lg-75-inch-uhd-ai-ut80-4k-smart-tv-ai-magic-remote-hdr10-webos24-75ut80006la-2/">
+										LG 75 Inch UHD AI UT80 4K Smart TV AI Magic remote HDR10 webOS24 - 75UT80006LA                                    </a>
+                                </h4>
+
+                                <div class="descr-box">
+																		<div class="quantity-wrapper clearfix size-sm"><div class="quantity">
+	<span class="minus"><i class="et-icon et-minus"></i></span>	<label class="screen-reader-text" for="quantity_69e600c0e1123">LG 75 Inch UHD AI UT80 4K Smart TV AI Magic remote HDR10 webOS24 - 75UT80006LA quantity</label>
+	<input type="number" id="quantity_69e600c0e1123" class="input-text qty text" name="quantity" value="1" aria-label="Product quantity" min="1" step="1" placeholder="" inputmode="numeric" autocomplete="off">
+	<span class="plus"><i class="et-icon et-plus"></i></span></div>
+<span class="quantity"> × <span class="woocommerce-Price-amount amount"><bdi><span class="woocommerce-Price-currencySymbol">₵</span>16,500.00</bdi></span></span></div><span class="quantity">1 × <span class="woocommerce-Price-amount amount"><bdi><span class="woocommerce-Price-currencySymbol">₵</span>16,500.00</bdi></span></span>                                
+                                </div>
+                            </div>
+							
+							
+                        </li>
+						            </ul>
+			
+					
+		
+</div><!-- end product list -->
+
+</div></div>                        </div>
+                                                    <div class="etheme-elementor-off-canvas_content-footer">
+                                
+        
+        
+        
+        <div class="etheme-elementor-off-canvas-content-prefooter-inner">
+
+                    <div class="cart-popup-footer">
+            <a href="https://doogo.shop/cart/" class="btn-view-cart wc-forward">Shopping cart                 (1)</a>
+            <div class="cart-widget-subtotal woocommerce-mini-cart__total total flex justify-content-between align-items-center" data-amount="16500">
+                <strong>Subtotal:</strong> <span class="woocommerce-Price-amount amount"><bdi><span class="woocommerce-Price-currencySymbol">₵</span>16,500.00</bdi></span>            </div>
+        </div>
+        
+            
+                            <p class="buttons mini-cart-buttons">
+                    <a href="https://doogo.shop/cart/" class="button wc-forward">View cart</a><a href="https://doogo.shop/checkout/" class="button btn-checkout wc-forward">Checkout</a>                </p>
+            
+            
+        </div>
+
+        
+        
+
+        
+        
+
+        
+        
+
+        
+                                    </div>
+                                            </div>
+                </div>
+                                <div class="etheme-elementor-off-canvas__toggle elementor-button-wrapper">
+                            <div class="elementor-button-wrapper">
+            <a class="elementor-button elementor-button-link etheme-elementor-off-canvas__toggle_button" href="https://doogo.shop/cart/" role="button" aria-expanded="false" data-e-disable-page-transition="true" aria-label="My Cart">
+                <span class="elementor-button-content-wrapper flex-wrap">
+                                <span class="elementor-button-icon">
+                <i aria-hidden="true" class="et-icon et-shopping-cart"></i>                                                        <span class="elementor-button-icon-qty" data-counter="1">
+            1        </span>
+        
+        
+        
+        
+                    </span>
+                    <span class="button-text full-width elementor-hidden-tablet elementor-hidden-mobile">
+                My Cart            </span>
+        
+                        </span>
+            </a>
+        </div>
+                        </div>
+
+            </div>
+        </div>
+        				</div>
+				</div>

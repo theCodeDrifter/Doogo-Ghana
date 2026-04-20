@@ -34,8 +34,8 @@ const TABS: TabDef[] = [
   { key: "account",  label: "Account"  },
 ];
 
-const ACTIVE_COLOR  = "#1a3a32";
-const INACTIVE_COLOR = "rgba(60, 60, 67, 0.55)";
+const ACTIVE_COLOR  = "#111111";
+const INACTIVE_COLOR = "rgba(0, 0, 0, 0.35)";
 
 function TabIcon({
   tabKey,
@@ -45,7 +45,7 @@ function TabIcon({
   isActive: boolean;
 }) {
   const color = isActive ? ACTIVE_COLOR : INACTIVE_COLOR;
-  const size = 26;
+  const size = 22;
 
   switch (tabKey) {
     case "home":

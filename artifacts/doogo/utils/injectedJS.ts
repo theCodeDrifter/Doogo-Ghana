@@ -129,24 +129,12 @@ true;
  */
 export const TRIGGER_CART_HEADER_JS = `
 (function() {
-  // Primary: exact widget class used by the theme
-  var primary = document.querySelector('.elementor-widget-theme-etheme_cart a, .elementor-widget-theme-etheme_cart button, .elementor-widget-theme-etheme_cart [role="button"]');
-  if (primary) { primary.click(); return; }
-  // Fallback: any clickable inside the widget
-  var widget = document.querySelector('.elementor-widget-theme-etheme_cart');
-  if (widget) { widget.click(); return; }
-  // Secondary fallbacks for other themes/versions
-  var fallbacks = [
-    '.elementor-menu-cart__toggle',
-    '.et-cart-info a',
-    '.wc-block-mini-cart__button',
-    '.cart-contents',
-    '[aria-label*="cart" i]'
-  ];
-  for (var i = 0; i < fallbacks.length; i++) {
-    var el = document.querySelector(fallbacks[i]);
-    if (el) { el.click(); return; }
-  }
+  // Exact off-canvas toggle button for the cart widget
+  var btn = document.querySelector('.elementor-widget-theme-etheme_cart .etheme-elementor-off-canvas__toggle_button');
+  if (btn) { btn.click(); return; }
+  // Fallback: the toggle wrapper div
+  var wrapper = document.querySelector('.elementor-widget-theme-etheme_cart .etheme-elementor-off-canvas__toggle');
+  if (wrapper) { wrapper.click(); return; }
 })();
 true;
 `;
@@ -157,24 +145,12 @@ true;
  */
 export const TRIGGER_WISHLIST_HEADER_JS = `
 (function() {
-  // Primary: exact widget class used by the theme
-  var primary = document.querySelector('.elementor-widget-theme-etheme_wishlist a, .elementor-widget-theme-etheme_wishlist button, .elementor-widget-theme-etheme_wishlist [role="button"]');
-  if (primary) { primary.click(); return; }
-  // Fallback: any clickable inside the widget
-  var widget = document.querySelector('.elementor-widget-theme-etheme_wishlist');
-  if (widget) { widget.click(); return; }
-  // Secondary fallbacks for other themes/versions
-  var fallbacks = [
-    '.yith-wcwl-wishlist-icon a',
-    '.ti-wishlists-icon a',
-    'a[href*="wishlist"]',
-    '[aria-label*="wishlist" i]',
-    '[aria-label*="favourite" i]'
-  ];
-  for (var i = 0; i < fallbacks.length; i++) {
-    var el = document.querySelector(fallbacks[i]);
-    if (el) { el.click(); return; }
-  }
+  // Exact off-canvas toggle button for the wishlist widget
+  var btn = document.querySelector('.elementor-widget-theme-etheme_wishlist .etheme-elementor-off-canvas__toggle_button');
+  if (btn) { btn.click(); return; }
+  // Fallback: the toggle wrapper div
+  var wrapper = document.querySelector('.elementor-widget-theme-etheme_wishlist .etheme-elementor-off-canvas__toggle');
+  if (wrapper) { wrapper.click(); return; }
 })();
 true;
 `;
