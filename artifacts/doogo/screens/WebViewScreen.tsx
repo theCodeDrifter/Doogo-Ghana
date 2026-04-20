@@ -1,6 +1,5 @@
 import * as Haptics from "expo-haptics";
 import * as Linking from "expo-linking";
-import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   BackHandler,
@@ -14,6 +13,7 @@ import WebView, {
   WebViewNavigation,
 } from "react-native-webview";
 
+import { GoogleAuthModal } from "@/components/GoogleAuthModal";
 import { LiquidGlassTabBar, TabKey } from "@/components/LiquidGlassTabBar";
 import { LoadingBar } from "@/components/LoadingBar";
 import { OfflineScreen } from "@/components/OfflineScreen";
@@ -86,6 +86,8 @@ export function WebViewScreen() {
   // ── Modal state ───────────────────────────────────────────────────────────
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
+  const [googleAuthVisible, setGoogleAuthVisible] = useState(false);
+  const [googleAuthUrl, setGoogleAuthUrl] = useState("");
 
   const oauthInProgress = useRef(false);
   const paymentInProgress = useRef(false);
@@ -122,6 +124,11 @@ export function WebViewScreen() {
   useEffect(() => {
     if (Platform.OS !== "android") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (googleAuthVisible) {
+        setGoogleAuthVisible(false);
+        oauthInProgress.current = false;
+        return true;
+      }
       if (paymentModalVisible) {
         setPaymentModalVisible(false);
         paymentInProgress.current = false;
@@ -134,38 +141,39 @@ export function WebViewScreen() {
       return false;
     });
     return () => sub.remove();
-  }, [canGoBack, paymentModalVisible]);
+  }, [canGoBack, paymentModalVisible, googleAuthVisible]);
 
   // ─── Google OAuth ─────────────────────────────────────────────────────────
-  const startGoogleAuth = useCallback(async (googleUrl: string) => {
+  // Opens Google sign-in inside an in-app modal WebView (NOT the system browser),
+  // so cookies are written into the same WKWebsiteDataStore / CookieManager as
+  // the main WebView. The instant Google redirects back to doogo.shop we close
+  // the modal and load that URL in the main WebView — already authenticated.
+  const startGoogleAuth = useCallback((googleUrl: string) => {
     if (oauthInProgress.current) return;
     oauthInProgress.current = true;
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const result = await WebBrowser.openAuthSessionAsync(
-        googleUrl,
-        "https://doogo.shop",
-        {
-          dismissButtonStyle: "cancel",
-          preferEphemeralSession: false,
-          showInRecents: false,
-          createTask: false,
-        }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setGoogleAuthUrl(googleUrl);
+    setGoogleAuthVisible(true);
+  }, []);
+
+  const handleGoogleAuthComplete = useCallback((doogoUrl: string) => {
+    setGoogleAuthVisible(false);
+    oauthInProgress.current = false;
+    const target = doogoUrl?.startsWith("https://doogo.shop")
+      ? doogoUrl
+      : MY_ACCOUNT_URL;
+    // Load in main WebView — cookies were written to the shared store, so this
+    // page renders with the user already logged in.
+    setTimeout(() => {
+      webViewRef.current?.injectJavaScript(
+        `window.location.replace('${target.replace(/'/g, "\\'")}'); true;`
       );
-      if (result.type === "success") {
-        const target =
-          result.url?.startsWith("https://doogo.shop")
-            ? result.url
-            : MY_ACCOUNT_URL;
-        webViewRef.current?.injectJavaScript(
-          `window.location.replace('${target.replace(/'/g, "\\'")}'); true;`
-        );
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    } catch {
-    } finally {
-      oauthInProgress.current = false;
-    }
+    }, 100);
+  }, []);
+
+  const handleGoogleAuthDismiss = useCallback(() => {
+    setGoogleAuthVisible(false);
+    oauthInProgress.current = false;
   }, []);
 
   // ─── Hubtel payment ───────────────────────────────────────────────────────
@@ -366,6 +374,13 @@ export function WebViewScreen() {
         paymentUrl={paymentUrl}
         onReturnToShop={handlePaymentReturn}
         onDismiss={handlePaymentDismiss}
+      />
+
+      <GoogleAuthModal
+        visible={googleAuthVisible}
+        authUrl={googleAuthUrl}
+        onAuthComplete={handleGoogleAuthComplete}
+        onDismiss={handleGoogleAuthDismiss}
       />
 
       {/* iOS 26 liquid-glass tab bar — sits above the WebView */}
