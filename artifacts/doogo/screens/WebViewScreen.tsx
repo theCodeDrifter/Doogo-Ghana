@@ -22,7 +22,6 @@ import { SplashLoading } from "@/components/SplashLoading";
 import { useNetwork } from "@/hooks/useNetwork";
 import { initPageCache } from "@/services/pageCache";
 import {
-  buildNavigateJS,
   INJECTED_BEFORE_CONTENT_JS,
   INJECTED_GOOGLE_OAUTH_INTERCEPTOR,
   TRIGGER_CART_MODAL_JS,
@@ -90,17 +89,26 @@ export function WebViewScreen() {
   const oauthInProgress = useRef(false);
   const paymentInProgress = useRef(false);
 
+  // Holds every pre-cached page's HTML so tab presses can serve instantly
+  const pageCacheRef = useRef<Map<string, string>>(new Map());
+  // When true, the loading bar is suppressed (tab nav via cached HTML)
+  const suppressLoadingBar = useRef(false);
+
   // ─── Warm the page cache (AsyncStorage) ──────────────────────────────────
-  // If home page HTML is already stored, serve it instantly as initial source.
-  // All navigation after that goes through { uri } — never switches back to { html }.
+  // Stores all critical pages on mount. Tab presses serve from this cache
+  // for zero-latency navigation. Background fetches update the cache for
+  // the next session.
   useEffect(() => {
-    initPageCache((_key, _html) => {
-      // Background refresh done — cache is updated for next session
+    initPageCache((key, freshHtml) => {
+      // Background refresh — keep the in-memory ref up to date
+      pageCacheRef.current.set(key, freshHtml);
     })
       .then((storedCache) => {
+        pageCacheRef.current = storedCache;
         const homeHtml = storedCache.get("home");
         if (homeHtml && !initialSourceSet.current) {
           initialSourceSet.current = true;
+          suppressLoadingBar.current = true;
           setWebViewSource({ html: homeHtml, baseUrl: "https://doogo.shop/" });
         }
       })
@@ -237,22 +245,36 @@ export function WebViewScreen() {
   // ─── Liquid-glass tab bar ─────────────────────────────────────────────────
   const handleTabPress = useCallback((key: TabKey) => {
     if (key === "cart") {
-      // Replicates the original navbar's cart icon behaviour: open the cart
-      // modal/popup on the current page rather than navigating to /cart/.
+      // Replicates the original navbar's cart icon: open the cart modal/popup
+      // on the current page — no navigation occurs.
       webViewRef.current?.injectJavaScript(TRIGGER_CART_MODAL_JS);
       return;
     }
-    const target = TAB_URLS[key];
-    if (!target) return;
+    const baseUrl = TAB_URLS[key];
+    if (!baseUrl) return;
     setActiveTab(key);
-    webViewRef.current?.injectJavaScript(buildNavigateJS(target));
+
+    const cached = pageCacheRef.current.get(key);
+    if (cached) {
+      // Serve the pre-cached HTML directly — truly instant, zero network.
+      // Suppress the loading bar since there's nothing to "load".
+      suppressLoadingBar.current = true;
+      setWebViewSource({ html: cached, baseUrl });
+    } else {
+      // No cache yet — fall back to a live URI load (will be fast via HTTP cache)
+      suppressLoadingBar.current = false;
+      setWebViewSource({ uri: baseUrl });
+    }
   }, []);
 
   const handleLoadStart = useCallback(() => {
-    setIsLoading(true);
+    if (!suppressLoadingBar.current) {
+      setIsLoading(true);
+    }
   }, []);
 
   const handleLoadEnd = useCallback(() => {
+    suppressLoadingBar.current = false;
     setIsLoading(false);
     setIsInitialLoad(false);
   }, []);
@@ -355,15 +377,14 @@ export function WebViewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // Mint matches splash — no white gap ever shows through the absoluteFill overlay
-    backgroundColor: "#d5f7f0",
+    backgroundColor: "#f3f8f7",
   },
   webViewContainer: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f3f8f7",
   },
   webView: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f3f8f7",
   },
 });

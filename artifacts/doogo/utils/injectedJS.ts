@@ -129,26 +129,63 @@ true;
  */
 export const TRIGGER_CART_MODAL_JS = `
 (function() {
-  var selectors = [
+  // Strategy 1: WooCommerce Blocks mini-cart button (modern themes)
+  var blockCart = document.querySelector('.wc-block-mini-cart__button, .wp-block-woocommerce-mini-cart');
+  if (blockCart) { try { blockCart.click(); return; } catch(e) {} }
+
+  // Strategy 2: Divi theme cart elements (any visibility)
+  var diviSelectors = [
     '.et-cart-info',
     '.et-cart-info-container a',
-    '.et_pb_menu__cart-button',
+    '.et_pb_menu .et-cart-info',
+    '#et-top-navigation .et-cart-info',
+    '.et_pb_menu_cart_icon',
+    '.et_pb_menu__cart-button'
+  ];
+  for (var i = 0; i < diviSelectors.length; i++) {
+    var el = document.querySelector(diviSelectors[i]);
+    if (el) { try { el.click(); return; } catch(e) {} }
+  }
+
+  // Strategy 3: Elementor menu-cart toggle
+  var elemSelectors = [
     '.elementor-menu-cart__toggle',
     '.elementor-menu-cart__toggle a',
-    '.menu-cart-toggle',
-    '.cart-contents',
-    'a.cart-customlocation',
-    'a[href*="?wc-ajax=get_refreshed_fragments"]',
-    'a[href$="/cart/"]'
+    '.elementor-menu-cart__toggle button'
   ];
-  for (var i = 0; i < selectors.length; i++) {
-    var el = document.querySelector(selectors[i]);
-    if (el) {
-      try { el.click(); return; } catch (e) {}
-    }
+  for (var j = 0; j < elemSelectors.length; j++) {
+    var el2 = document.querySelector(elemSelectors[j]);
+    if (el2) { try { el2.click(); return; } catch(e) {} }
   }
-  // Fallback — open the cart page directly
-  window.location.href = 'https://doogo.shop/cart/';
+
+  // Strategy 4: Find and click the cart button inside the hidden Divi mobile panel
+  // (temporarily make it accessible, click, then immediately rehide)
+  var panel = document.querySelector('.et-mobile-panel-wrapper, .et-fixed-mobile-panel, #et-mobile-panel');
+  if (panel) {
+    var prevDisplay = panel.style.display;
+    var prevVisibility = panel.style.visibility;
+    panel.style.setProperty('display', 'block', 'important');
+    panel.style.setProperty('visibility', 'visible', 'important');
+    var cartInPanel = panel.querySelector('[class*="cart"], a[href*="cart"]');
+    if (cartInPanel) {
+      try { cartInPanel.click(); } catch(e) {}
+      panel.style.display = prevDisplay;
+      panel.style.visibility = prevVisibility;
+      return;
+    }
+    panel.style.display = prevDisplay;
+    panel.style.visibility = prevVisibility;
+  }
+
+  // Strategy 5: jQuery-based Divi/WooCommerce event triggers
+  if (window.jQuery) {
+    var $ = window.jQuery;
+    if ($('.et-cart-info').length) { $('.et-cart-info').trigger('click'); return; }
+    if ($('.elementor-menu-cart__toggle').length) { $('.elementor-menu-cart__toggle').trigger('click'); return; }
+    $(document.body).trigger('wc_fragment_refresh');
+  }
+
+  // No navigation fallback — do nothing if cart modal can't be found
 })();
 true;
 `;
