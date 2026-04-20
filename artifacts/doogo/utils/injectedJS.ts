@@ -129,38 +129,23 @@ true;
  */
 export const TRIGGER_CART_HEADER_JS = `
 (function() {
-  var headerRoots = [
-    '#main-header',
-    '#et-top-navigation',
-    '#top-header',
-    'header',
-    '.et-l--header',
-    '#page-container'
-  ];
-  var cartSelectors = [
-    '.et-cart-info',
-    '.et-cart-info a',
-    '.et-cart-info-container a',
-    '.et_pb_menu__cart-button',
+  // Primary: exact widget class used by the theme
+  var primary = document.querySelector('.elementor-widget-theme-etheme_cart a, .elementor-widget-theme-etheme_cart button, .elementor-widget-theme-etheme_cart [role="button"]');
+  if (primary) { primary.click(); return; }
+  // Fallback: any clickable inside the widget
+  var widget = document.querySelector('.elementor-widget-theme-etheme_cart');
+  if (widget) { widget.click(); return; }
+  // Secondary fallbacks for other themes/versions
+  var fallbacks = [
     '.elementor-menu-cart__toggle',
-    '.elementor-menu-cart__toggle a',
+    '.et-cart-info a',
     '.wc-block-mini-cart__button',
     '.cart-contents',
-    '[class*="header-cart"] a',
-    '[class*="cart-icon"] a'
+    '[aria-label*="cart" i]'
   ];
-  for (var h = 0; h < headerRoots.length; h++) {
-    var root = document.querySelector(headerRoots[h]);
-    if (!root) continue;
-    for (var i = 0; i < cartSelectors.length; i++) {
-      var el = root.querySelector(cartSelectors[i]);
-      if (el) { try { el.click(); return; } catch(e) {} }
-    }
-  }
-  // jQuery fallback for Divi/WooCommerce
-  if (window.jQuery) {
-    var $cart = window.jQuery('#main-header .et-cart-info, #et-top-navigation .et-cart-info, header .elementor-menu-cart__toggle').first();
-    if ($cart.length) { $cart.trigger('click'); }
+  for (var i = 0; i < fallbacks.length; i++) {
+    var el = document.querySelector(fallbacks[i]);
+    if (el) { el.click(); return; }
   }
 })();
 true;
@@ -172,39 +157,23 @@ true;
  */
 export const TRIGGER_WISHLIST_HEADER_JS = `
 (function() {
-  var headerRoots = [
-    '#main-header',
-    '#et-top-navigation',
-    '#top-header',
-    'header',
-    '.et-l--header',
-    '#page-container'
-  ];
-  var wishlistSelectors = [
-    '[class*="wishlist"]',
-    '[class*="favourite"]',
-    '[class*="favorite"]',
-    '.yith-wcwl-wishlist-icon',
-    '.ti-wishlists-icon',
+  // Primary: exact widget class used by the theme
+  var primary = document.querySelector('.elementor-widget-theme-etheme_wishlist a, .elementor-widget-theme-etheme_wishlist button, .elementor-widget-theme-etheme_wishlist [role="button"]');
+  if (primary) { primary.click(); return; }
+  // Fallback: any clickable inside the widget
+  var widget = document.querySelector('.elementor-widget-theme-etheme_wishlist');
+  if (widget) { widget.click(); return; }
+  // Secondary fallbacks for other themes/versions
+  var fallbacks = [
+    '.yith-wcwl-wishlist-icon a',
+    '.ti-wishlists-icon a',
     'a[href*="wishlist"]',
-    '[data-wishlists-count]',
-    '.header-wishlist a',
     '[aria-label*="wishlist" i]',
-    '[aria-label*="favourite" i]',
-    '[title*="wishlist" i]'
+    '[aria-label*="favourite" i]'
   ];
-  for (var h = 0; h < headerRoots.length; h++) {
-    var root = document.querySelector(headerRoots[h]);
-    if (!root) continue;
-    for (var i = 0; i < wishlistSelectors.length; i++) {
-      var el = root.querySelector(wishlistSelectors[i]);
-      if (el) { try { el.click(); return; } catch(e) {} }
-    }
-  }
-  // jQuery fallback
-  if (window.jQuery) {
-    var $wl = window.jQuery('#main-header [class*="wishlist"], header [class*="wishlist"]').first();
-    if ($wl.length) { $wl.trigger('click'); }
+  for (var i = 0; i < fallbacks.length; i++) {
+    var el = document.querySelector(fallbacks[i]);
+    if (el) { el.click(); return; }
   }
 })();
 true;
