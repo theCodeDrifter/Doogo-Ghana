@@ -20,9 +20,10 @@ const LOGO_WIDTH = Math.min(SCREEN_WIDTH * 0.5, 280);
 type Category = { icon: keyof typeof Feather.glyphMap; label: string };
 const CATEGORIES: Category[] = [
   { icon: "home", label: "Appliances" },
-  { icon: "tool", label: "Tools" },
-  { icon: "package", label: "Furniture" },
-  { icon: "zap", label: "Décor" },
+  { icon: "tool", label: "Kitchen Tools" },
+  { icon: "sun", label: "Lighting" },
+  { icon: "zap", label: "Electricals & Power" },
+  { icon: "package", label: "Furniture & Décor" },
 ];
 
 interface Props {
@@ -116,8 +117,8 @@ export function OnboardingScreen({ onFinish }: Props) {
             <Text style={styles.headlineAccent}>home</Text>, in one place.
           </Text>
           <Text style={styles.subhead}>
-            Premium appliances, professional tools and statement furniture —
-            sourced, curated and delivered to your doorstep across Ghana.
+            Premium appliances, statement furniture and tools — sourced,
+            curated and delivered to your doorstep across Ghana.
           </Text>
         </View>
 
@@ -146,7 +147,7 @@ export function OnboardingScreen({ onFinish }: Props) {
           </View>
         </View>
 
-        {/* CTA */}
+        {/* CTA — cream pill with embedded dark-teal arrow square */}
         <Pressable
           onPress={handlePress}
           style={({ pressed }) => [
@@ -157,7 +158,9 @@ export function OnboardingScreen({ onFinish }: Props) {
           accessibilityLabel="Start shopping"
         >
           <Text style={styles.ctaText}>Start Shopping</Text>
-          <Feather name="arrow-right" size={18} color="#0b1d1a" />
+          <View style={styles.ctaArrowBox}>
+            <Feather name="arrow-right" size={18} color="#ffffff" />
+          </View>
         </Pressable>
 
         <Text style={styles.skipHint}>Tap to continue · Auto-starts shortly</Text>
@@ -273,13 +276,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#3d524d",
   },
   cta: {
-    backgroundColor: "#ffffff",
-    paddingVertical: 17,
+    backgroundColor: "#f5f1e8",
+    paddingVertical: 8,
+    paddingLeft: 22,
+    paddingRight: 8,
     borderRadius: 999,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
+    justifyContent: "space-between",
     shadowColor: "#000",
     shadowOpacity: 0.35,
     shadowRadius: 18,
@@ -287,10 +291,18 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   ctaText: {
-    color: "#0b1d1a",
+    color: "#1a3a32",
     fontSize: 16,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 0.2,
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.1,
+  },
+  ctaArrowBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: "#1a3a32",
+    alignItems: "center",
+    justifyContent: "center",
   },
   skipHint: {
     textAlign: "center",
