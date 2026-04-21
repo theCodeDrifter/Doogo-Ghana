@@ -114,7 +114,8 @@ export function OnboardingScreen({ onFinish }: Props) {
           <Text style={styles.eyebrow}>WELCOME TO DOOGO</Text>
           <Text style={styles.headline}>
             Everything for your{"\n"}
-            <Text style={styles.headlineAccent}>home</Text>, in one place.
+            <Text style={styles.headlineAccent}>home</Text>,
+            <Text style={styles.headlineItalic}> in one place.</Text>
           </Text>
           <Text style={styles.subhead}>
             Premium appliances, statement furniture and tools — sourced,
@@ -222,6 +223,12 @@ const styles = StyleSheet.create({
   headlineAccent: {
     color: "#beebe5",
     fontFamily: "Geist_500Medium",
+  },
+  headlineItalic: {
+    fontFamily: "InstrumentSerif_400Regular_Italic",
+    color: "#ffffff",
+    fontSize: 38,
+    letterSpacing: -0.5,
   },
   subhead: {
     color: "rgba(233, 245, 241, 0.72)",

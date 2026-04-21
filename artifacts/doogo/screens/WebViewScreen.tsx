@@ -24,9 +24,13 @@ import { initPageCache } from "@/services/pageCache";
 import {
   INJECTED_BEFORE_CONTENT_JS,
   INJECTED_GOOGLE_OAUTH_INTERCEPTOR,
+  INJECTED_OFFCANVAS_WATCHER,
   TRIGGER_CART_HEADER_JS,
   TRIGGER_WISHLIST_HEADER_JS,
 } from "@/utils/injectedJS";
+
+const POST_DOM_INJECTED_JS =
+  INJECTED_GOOGLE_OAUTH_INTERCEPTOR + "\n" + INJECTED_OFFCANVAS_WATCHER;
 import { isTrustedUrl } from "@/utils/urlUtils";
 
 // Tabs that navigate to a page (wishlist & cart trigger header icons instead)
@@ -82,6 +86,7 @@ export function WebViewScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey | null>("home");
+  const [offCanvasOpen, setOffCanvasOpen] = useState(false);
 
   // ── Modal state ───────────────────────────────────────────────────────────
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
@@ -295,6 +300,8 @@ export function WebViewScreen() {
         const data = JSON.parse(event.nativeEvent.data);
         if (data.type === "GOOGLE_OAUTH" && data.url)
           startGoogleAuth(data.url);
+        if (data.type === "OFFCANVAS")
+          setOffCanvasOpen(Boolean(data.open));
       } catch {}
     },
     [startGoogleAuth]
@@ -334,7 +341,7 @@ export function WebViewScreen() {
           // CSS + viewport injected before any pixel renders (zero flash)
           injectedJavaScriptBeforeContentLoaded={INJECTED_BEFORE_CONTENT_JS}
           // Google OAuth interceptor — post DOM (needs click listeners)
-          injectedJavaScript={INJECTED_GOOGLE_OAUTH_INTERCEPTOR}
+          injectedJavaScript={POST_DOM_INJECTED_JS}
           javaScriptEnabled={true}
           domStorageEnabled={true}
           sharedCookiesEnabled={true}
@@ -383,8 +390,9 @@ export function WebViewScreen() {
         onDismiss={handleGoogleAuthDismiss}
       />
 
-      {/* iOS 26 liquid-glass tab bar — sits above the WebView */}
-      {!isInitialLoad && (
+      {/* iOS 26 liquid-glass tab bar — hidden whenever an off-canvas panel is open
+          so the panel can overlay the entire screen unobstructed */}
+      {!isInitialLoad && !offCanvasOpen && (
         <LiquidGlassTabBar active={activeTab} onTabPress={handleTabPress} />
       )}
     </View>

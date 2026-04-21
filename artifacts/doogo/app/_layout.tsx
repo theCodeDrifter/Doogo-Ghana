@@ -5,6 +5,9 @@ import {
   Geist_700Bold,
   useFonts,
 } from "@expo-google-fonts/geist";
+import {
+  InstrumentSerif_400Regular_Italic,
+} from "@expo-google-fonts/instrument-serif";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -37,6 +40,7 @@ export default function RootLayout() {
     Geist_500Medium,
     Geist_600SemiBold,
     Geist_700Bold,
+    InstrumentSerif_400Regular_Italic,
   });
 
   useEffect(() => {

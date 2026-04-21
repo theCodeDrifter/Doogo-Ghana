@@ -15,6 +15,10 @@ export const CSS_OVERRIDES = `
   #et-mobile-panel,
   .et_pb_mobile_menu,
   .et-mobile-bar { display: none !important; visibility: hidden !important; }
+  /* Off-canvas panels must float above everything (tab bar is hidden natively when open) */
+  .etheme-elementor-off-canvas__main,
+  .etheme-elementor-off-canvas,
+  .etheme-elementor-off-canvas__overlay { z-index: 2147483646 !important; }
   /* Reserve space at the bottom so content isn't hidden under the native tab bar (~92pt + safe-area) */
   body { padding-bottom: 110px !important; background-color: #f3f8f7 !important; }
   html { background-color: #f3f8f7 !important; }
@@ -162,6 +166,86 @@ true;
 export function buildNavigateJS(url: string): string {
   return `window.location.href = ${JSON.stringify(url)}; true;`;
 }
+
+/**
+ * Watches every `.etheme-elementor-off-canvas__main` panel and reports its
+ * open/closed state to React Native via OFFCANVAS messages, so the native
+ * tab bar can be hidden while a panel is open (giving the panel an
+ * unobstructed full-screen overlay).
+ */
+export const INJECTED_OFFCANVAS_WATCHER = `
+(function() {
+  if (window.__doogoOffCanvasWatcherInstalled) return;
+  window.__doogoOffCanvasWatcherInstalled = true;
+
+  function isPanelOpen(el) {
+    if (!el) return false;
+    // Class-based open markers (Etheme variants)
+    var cls = el.className || '';
+    if (typeof cls === 'string' && (
+      cls.indexOf('--opened') !== -1 ||
+      cls.indexOf('is-open') !== -1 ||
+      cls.indexOf('opened') !== -1 ||
+      cls.indexOf('active') !== -1
+    )) return true;
+    if (el.getAttribute && el.getAttribute('aria-hidden') === 'false') return true;
+    // Computed-style fallback — visible & not transformed off-screen
+    try {
+      var cs = window.getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity || '0') < 0.05) {
+        return false;
+      }
+      var t = cs.transform || '';
+      if (t.indexOf('matrix') !== -1) {
+        var m = t.match(/-?\\d+\\.?\\d*/g);
+        if (m) {
+          var tx = parseFloat(m[4] || '0');
+          var ty = parseFloat(m[5] || '0');
+          if (Math.abs(tx) > 50 || Math.abs(ty) > 50) return false;
+        }
+      }
+      return cs.visibility === 'visible';
+    } catch (e) { return false; }
+  }
+
+  function anyOpen() {
+    var nodes = document.querySelectorAll('.etheme-elementor-off-canvas__main, .etheme-elementor-off-canvas');
+    for (var i = 0; i < nodes.length; i++) {
+      if (isPanelOpen(nodes[i])) return true;
+    }
+    // Body class fallback (Etheme typically locks scroll via body class)
+    if (document.body && document.body.className && (
+      document.body.className.indexOf('etheme-off-canvas-opened') !== -1 ||
+      document.body.className.indexOf('off-canvas-opened') !== -1 ||
+      document.body.className.indexOf('etheme-elementor-off-canvas-opened') !== -1
+    )) return true;
+    return false;
+  }
+
+  var lastState = false;
+  function check() {
+    var open = anyOpen();
+    if (open !== lastState) {
+      lastState = open;
+      window.ReactNativeWebView && window.ReactNativeWebView.postMessage(
+        JSON.stringify({ type: 'OFFCANVAS', open: open })
+      );
+    }
+  }
+
+  var mo = new MutationObserver(check);
+  mo.observe(document.documentElement, {
+    attributes: true,
+    subtree: true,
+    childList: true,
+    attributeFilter: ['class', 'style', 'aria-hidden']
+  });
+  // Safety net for edge cases (animations, late JS)
+  setInterval(check, 400);
+  check();
+})();
+true;
+`;
 
 /** Legacy alias kept for any remaining imports */
 export const INJECTED_META = INJECTED_BEFORE_CONTENT_JS;
