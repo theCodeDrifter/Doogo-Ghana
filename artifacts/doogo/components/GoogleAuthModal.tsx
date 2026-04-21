@@ -183,9 +183,9 @@ export function GoogleAuthModal({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffff" },
+  container: { flex: 1, backgroundColor: "#f3f8f7" },
   header: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f3f8f7",
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#c8ece5",
     alignItems: "center",
@@ -208,21 +208,21 @@ const styles = StyleSheet.create({
   closeButton: {
     position: "absolute", right: 16, bottom: 12,
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: "#e6fffa",
+    backgroundColor: "#f3f8f7",
     alignItems: "center", justifyContent: "center",
   },
   webViewContainer: { flex: 1 },
   webView: { flex: 1 },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#e6fffa",
+    backgroundColor: "#f3f8f7",
     alignItems: "center", justifyContent: "center",
     gap: 12, zIndex: 10,
   },
   loadingText: { fontSize: 14, color: "#5a7a72", fontWeight: "500" },
   errorContainer: {
     flex: 1, alignItems: "center", justifyContent: "center",
-    paddingHorizontal: 40, gap: 12, backgroundColor: "#e6fffa",
+    paddingHorizontal: 40, gap: 12, backgroundColor: "#f3f8f7",
   },
   errorTitle: { fontSize: 20, fontWeight: "700", color: "#0d1f1a" },
   errorSubtitle: { fontSize: 14, color: "#5a7a72", textAlign: "center", lineHeight: 22 },

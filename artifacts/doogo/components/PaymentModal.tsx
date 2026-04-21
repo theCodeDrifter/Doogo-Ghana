@@ -199,10 +199,10 @@ export function PaymentModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f3f8f7",
   },
   header: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f3f8f7",
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#c8ece5",
     alignItems: "center",
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#e6fffa",
+    backgroundColor: "#f3f8f7",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#e6fffa",
+    backgroundColor: "#f3f8f7",
     alignItems: "center",
     justifyContent: "center",
     gap: 12,
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 40,
     gap: 12,
-    backgroundColor: "#e6fffa",
+    backgroundColor: "#f3f8f7",
   },
   errorTitle: {
     fontSize: 20,
