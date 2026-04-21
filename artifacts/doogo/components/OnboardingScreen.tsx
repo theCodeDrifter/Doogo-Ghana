@@ -95,7 +95,7 @@ export function OnboardingScreen({ onFinish }: Props) {
           {
             opacity: fade,
             transform: [{ translateY: slide }],
-            paddingTop: insets.top + 32,
+            paddingTop: insets.top + 72,
             paddingBottom: insets.bottom + 28,
           },
         ]}
