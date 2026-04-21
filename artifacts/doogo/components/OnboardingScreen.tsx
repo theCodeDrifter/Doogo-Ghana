@@ -206,29 +206,29 @@ const styles = StyleSheet.create({
     marginBottom: 26,
   },
   eyebrow: {
-    color: "#f7c538",
+    color: "#beebe5",
     fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Geist_600SemiBold",
     letterSpacing: 2.4,
     marginBottom: 14,
   },
   headline: {
     color: "#ffffff",
     fontSize: 32,
-    lineHeight: 38,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: -0.6,
+    lineHeight: 34,
+    fontFamily: "Geist_500Medium",
+    letterSpacing: -0.8,
   },
   headlineAccent: {
-    color: "#f7c538",
-    fontFamily: "Inter_700Bold",
+    color: "#beebe5",
+    fontFamily: "Geist_500Medium",
   },
   subhead: {
     color: "rgba(233, 245, 241, 0.72)",
     fontSize: 15,
     lineHeight: 22,
     marginTop: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Geist_400Regular",
   },
   chipRow: {
     flexDirection: "row",
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   chipText: {
     color: "#e9f5f1",
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Geist_500Medium",
     letterSpacing: 0.2,
   },
   valueRow: {
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   valueText: {
     color: "#9ec9bf",
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Geist_500Medium",
   },
   dot: {
     width: 3,
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   ctaText: {
     color: "#1a3a32",
     fontSize: 16,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Geist_600SemiBold",
     letterSpacing: 0.1,
   },
   ctaArrowBox: {
@@ -309,6 +309,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.35)",
     fontSize: 11,
     marginTop: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Geist_400Regular",
   },
 });

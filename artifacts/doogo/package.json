@@ -11,7 +11,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@expo-google-fonts/inter": "^0.4.0",
     "@expo/cli": "54.0.23",
     "@expo/ngrok": "^4.1.0",
     "@expo/vector-icons": "^15.0.3",
@@ -56,6 +55,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "@expo-google-fonts/geist": "^0.4.1",
     "@react-native-community/netinfo": "11.4.1",
     "expo-file-system": "~19.0.21",
     "expo-notifications": "~0.32.16",
