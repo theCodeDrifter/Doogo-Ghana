@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "00a071c8-8cdc-462f-b589-5000a9f12c05"
+      }
+    },
+    "android": {
+      "package": "com.palipali.doogo"
+    }
+  }
+}
