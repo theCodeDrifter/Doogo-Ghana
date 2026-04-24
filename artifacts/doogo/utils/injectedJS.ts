@@ -178,47 +178,32 @@ export const INJECTED_OFFCANVAS_WATCHER = `
   if (window.__doogoOffCanvasWatcherInstalled) return;
   window.__doogoOffCanvasWatcherInstalled = true;
 
-  function isPanelOpen(el) {
-    if (!el) return false;
-    // Class-based open markers (Etheme variants)
-    var cls = el.className || '';
-    if (typeof cls === 'string' && (
-      cls.indexOf('--opened') !== -1 ||
-      cls.indexOf('is-open') !== -1 ||
-      cls.indexOf('opened') !== -1 ||
-      cls.indexOf('active') !== -1
-    )) return true;
-    if (el.getAttribute && el.getAttribute('aria-hidden') === 'false') return true;
-    // Computed-style fallback — visible & not transformed off-screen
-    try {
-      var cs = window.getComputedStyle(el);
-      if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity || '0') < 0.05) {
-        return false;
-      }
-      var t = cs.transform || '';
-      if (t.indexOf('matrix') !== -1) {
-        var m = t.match(/-?\\d+\\.?\\d*/g);
-        if (m) {
-          var tx = parseFloat(m[4] || '0');
-          var ty = parseFloat(m[5] || '0');
-          if (Math.abs(tx) > 50 || Math.abs(ty) > 50) return false;
-        }
-      }
-      return cs.visibility === 'visible';
-    } catch (e) { return false; }
-  }
-
+  // STRICT detection — only flag "open" on explicit Etheme markers.
+  // Avoids false positives from generic .active / aria-hidden="false" defaults
+  // that exist on many Elementor elements at all times.
   function anyOpen() {
-    var nodes = document.querySelectorAll('.etheme-elementor-off-canvas__main, .etheme-elementor-off-canvas');
-    for (var i = 0; i < nodes.length; i++) {
-      if (isPanelOpen(nodes[i])) return true;
-    }
-    // Body class fallback (Etheme typically locks scroll via body class)
-    if (document.body && document.body.className && (
-      document.body.className.indexOf('etheme-off-canvas-opened') !== -1 ||
-      document.body.className.indexOf('off-canvas-opened') !== -1 ||
-      document.body.className.indexOf('etheme-elementor-off-canvas-opened') !== -1
+    // 1. The panel element itself gets a literal "opened" suffix class when open
+    var openedNodes = document.querySelectorAll(
+      '.etheme-elementor-off-canvas__main--opened, ' +
+      '.etheme-elementor-off-canvas--opened, ' +
+      '.etheme-elementor-off-canvas.opened, ' +
+      '.etheme-elementor-off-canvas__main.opened'
+    );
+    if (openedNodes.length > 0) return true;
+
+    // 2. Body / html scroll-lock class added by Etheme when any panel opens
+    var bodyCls = (document.body && document.body.className) || '';
+    var htmlCls = (document.documentElement && document.documentElement.className) || '';
+    if (typeof bodyCls === 'string' && (
+      bodyCls.indexOf('etheme-off-canvas-opened') !== -1 ||
+      bodyCls.indexOf('etheme-elementor-off-canvas-opened') !== -1 ||
+      bodyCls.indexOf('off-canvas-is-open') !== -1
     )) return true;
+    if (typeof htmlCls === 'string' && (
+      htmlCls.indexOf('etheme-off-canvas-opened') !== -1 ||
+      htmlCls.indexOf('etheme-elementor-off-canvas-opened') !== -1
+    )) return true;
+
     return false;
   }
 
