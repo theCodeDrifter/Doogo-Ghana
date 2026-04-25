@@ -1,12 +1,76 @@
 {
   "expo": {
+    "name": "Doogo",
+    "slug": "doogo",
+    "version": "1.0.3",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "doogo",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.palipali.doogo",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow Doogo to access your photo library to upload images.",
+        "NSCameraUsageDescription": "Allow Doogo to access your camera to take photos.",
+        "NSMicrophoneUsageDescription": "Allow Doogo to access your microphone."
+      }
+    },
+    "android": {
+      "package": "doogo.shop",
+      "permissions": [
+        "INTERNET",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash_logo.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#f3f8f7"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#1a3a32"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Doogo to access your photos to upload images."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
     "extra": {
       "eas": {
         "projectId": "54b464fa-2292-4b1b-88b0-9d2ed65dd0c8"
       }
     },
-    "android": {
-      "package": "com.palipali.doogo"
-    }
+    "owner": "doogo"
   }
 }
