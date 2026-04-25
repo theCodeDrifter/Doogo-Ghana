@@ -5,13 +5,16 @@
   },
   "build": {
     "development": {
+      "pnpm": "10",
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
+      "pnpm": "10",
       "distribution": "internal"
     },
     "production": {
+      "pnpm": "10",
       "autoIncrement": true
     }
   },
