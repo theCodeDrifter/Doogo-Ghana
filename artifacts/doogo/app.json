@@ -65,6 +65,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "54b464fa-2292-4b1b-88b0-9d2ed65dd0c8"
+      }
+    },
+    "owner": "palipali"
   }
 }
