@@ -18,7 +18,7 @@
       }
     },
     "android": {
-      "package": "com.palipali.doogo",
+      "package": "doogo.shop",
       "permissions": [
         "INTERNET",
         "READ_EXTERNAL_STORAGE",
