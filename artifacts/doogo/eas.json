@@ -7,20 +7,26 @@
     "development": {
       "node": "20.18.0",
       "pnpm": "10.26.1",
-      "java": "17",
+      "android": {
+        "image": "ubuntu-22.04-jdk-17-ndk-r26b"
+      },
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
       "node": "20.18.0",
       "pnpm": "10.26.1",
-      "java": "17",
+      "android": {
+        "image": "ubuntu-22.04-jdk-17-ndk-r26b"
+      },
       "distribution": "internal"
     },
     "production": {
       "node": "20.18.0",
       "pnpm": "10.26.1",
-      "java": "17",
+      "android": {
+        "image": "ubuntu-22.04-jdk-17-ndk-r26b"
+      },
       "autoIncrement": true
     }
   },
