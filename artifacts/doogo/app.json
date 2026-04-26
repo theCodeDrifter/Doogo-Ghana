@@ -14,7 +14,8 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow Doogo to access your photo library to upload images.",
         "NSCameraUsageDescription": "Allow Doogo to access your camera to take photos.",
-        "NSMicrophoneUsageDescription": "Allow Doogo to access your microphone."
+        "NSMicrophoneUsageDescription": "Allow Doogo to access your microphone.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
