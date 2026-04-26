@@ -11,7 +11,7 @@
         "image": "ubuntu-22.04-jdk-17-ndk-r26b"
       },
       "ios": {
-        "image": "macos-sonoma-14.7-xcode-16.2"
+        "image": "macos-sonoma-14.6-xcode-16.1"
       },
       "developmentClient": true,
       "distribution": "internal"
@@ -23,7 +23,7 @@
         "image": "ubuntu-22.04-jdk-17-ndk-r26b"
       },
       "ios": {
-        "image": "macos-sonoma-14.7-xcode-16.2"
+        "image": "macos-sonoma-14.6-xcode-16.1"
       },
       "distribution": "internal"
     },
@@ -34,7 +34,7 @@
         "image": "ubuntu-22.04-jdk-17-ndk-r26b"
       },
       "ios": {
-        "image": "macos-sonoma-14.7-xcode-16.2"
+        "image": "macos-sonoma-14.6-xcode-16.1"
       },
       "autoIncrement": true
     }
