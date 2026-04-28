@@ -34,8 +34,8 @@ const TABS: TabDef[] = [
   { key: "account",  label: "Account"  },
 ];
 
-const ACTIVE_COLOR  = "#111111";
-const INACTIVE_COLOR = "rgba(0, 0, 0, 0.35)";
+const ACTIVE_COLOR  = "#334f51";
+const INACTIVE_COLOR = "#000000";
 
 function TabIcon({
   tabKey,
